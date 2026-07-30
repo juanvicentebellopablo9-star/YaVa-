@@ -1,0 +1,6 @@
+{
+  "name": "YaVa!",
+  "description": "YaVa! - Acelerando Tus Sueños | Plataforma de logística bajo demanda para envíos locales veloces y confiables.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
