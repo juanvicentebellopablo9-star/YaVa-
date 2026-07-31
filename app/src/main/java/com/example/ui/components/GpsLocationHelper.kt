@@ -1,6 +1,7 @@
 package com.example.ui.components
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
@@ -11,6 +12,13 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import java.util.Locale
 
 data class RealGpsLocation(
@@ -28,6 +36,7 @@ object GpsLocationHelper {
         return finePerm == PackageManager.PERMISSION_GRANTED || coarsePerm == PackageManager.PERMISSION_GRANTED
     }
 
+    @SuppressLint("MissingPermission")
     fun getCurrentRealGpsLocation(
         context: Context,
         onLocationReceived: (RealGpsLocation) -> Unit,
@@ -38,6 +47,108 @@ object GpsLocationHelper {
             return
         }
 
+        try {
+            val fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
+            val cancellationTokenSource = CancellationTokenSource()
+
+            fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                cancellationTokenSource.token
+            ).addOnSuccessListener { location: Location? ->
+                if (location != null) {
+                    val address = resolveAddress(context, location.latitude, location.longitude)
+                    onLocationReceived(
+                        RealGpsLocation(
+                            latitude = location.latitude,
+                            longitude = location.longitude,
+                            accuracyMeters = location.accuracy,
+                            formattedAddress = address
+                        )
+                    )
+                } else {
+                    // Try lastLocation cache or fallback to system LocationManager
+                    fusedLocationClient.lastLocation.addOnSuccessListener { lastLoc: Location? ->
+                        if (lastLoc != null) {
+                            val address = resolveAddress(context, lastLoc.latitude, lastLoc.longitude)
+                            onLocationReceived(
+                                RealGpsLocation(
+                                    latitude = lastLoc.latitude,
+                                    longitude = lastLoc.longitude,
+                                    accuracyMeters = lastLoc.accuracy,
+                                    formattedAddress = address
+                                )
+                            )
+                        } else {
+                            fetchFallbackSystemLocationManager(context, onLocationReceived, onError)
+                        }
+                    }.addOnFailureListener {
+                        fetchFallbackSystemLocationManager(context, onLocationReceived, onError)
+                    }
+                }
+            }.addOnFailureListener {
+                fetchFallbackSystemLocationManager(context, onLocationReceived, onError)
+            }
+        } catch (e: Exception) {
+            fetchFallbackSystemLocationManager(context, onLocationReceived, onError)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun startRealTimeLocationUpdates(
+        context: Context,
+        intervalMs: Long = 4000L,
+        onLocationUpdate: (RealGpsLocation) -> Unit,
+        onError: (String) -> Unit
+    ): LocationCallback? {
+        if (!hasLocationPermission(context)) {
+            onError("Permisos de ubicación GPS no otorgados para rastreo en tiempo real.")
+            return null
+        }
+
+        return try {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+            val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, intervalMs)
+                .setMinUpdateIntervalMillis(intervalMs / 2)
+                .build()
+
+            val callback = object : LocationCallback() {
+                override fun onLocationResult(result: LocationResult) {
+                    result.lastLocation?.let { loc ->
+                        val address = resolveAddress(context, loc.latitude, loc.longitude)
+                        onLocationUpdate(
+                            RealGpsLocation(
+                                latitude = loc.latitude,
+                                longitude = loc.longitude,
+                                accuracyMeters = loc.accuracy,
+                                formattedAddress = address
+                            )
+                        )
+                    }
+                }
+            }
+
+            fusedLocationClient.requestLocationUpdates(locationRequest, callback, Looper.getMainLooper())
+            callback
+        } catch (e: Exception) {
+            onError("Error iniciando rastreo GPS en tiempo real: ${e.message}")
+            null
+        }
+    }
+
+    fun stopRealTimeLocationUpdates(context: Context, callback: LocationCallback) {
+        try {
+            LocationServices.getFusedLocationProviderClient(context).removeLocationUpdates(callback)
+        } catch (e: Exception) {
+            // Ignore cleanup error
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun fetchFallbackSystemLocationManager(
+        context: Context,
+        onLocationReceived: (RealGpsLocation) -> Unit,
+        onError: (String) -> Unit
+    ) {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
         if (locationManager == null) {
             onError("Servicio de GPS del dispositivo no disponible.")
@@ -48,14 +159,13 @@ object GpsLocationHelper {
         val isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 
         if (!isGpsEnabled && !isNetworkEnabled) {
-            onError("El GPS o Servicios de Ubicación están desactivados. Por favor actívalos en los ajustes de tu dispositivo.")
+            onError("El GPS o Servicios de Ubicación están desactivados. Por favor actívalos en ajustes.")
             return
         }
 
         val provider = if (isGpsEnabled) LocationManager.GPS_PROVIDER else LocationManager.NETWORK_PROVIDER
 
         try {
-            // Check last known location first for immediate response
             val lastKnown = locationManager.getLastKnownLocation(provider)
                 ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
 
@@ -72,7 +182,6 @@ object GpsLocationHelper {
                 return
             }
 
-            // Single update request
             val locationListener = object : LocationListener {
                 override fun onLocationChanged(location: Location) {
                     locationManager.removeUpdates(this)
@@ -86,7 +195,6 @@ object GpsLocationHelper {
                         )
                     )
                 }
-
                 @Deprecated("Deprecated in API")
                 override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
                 override fun onProviderEnabled(provider: String) {}
@@ -95,13 +203,10 @@ object GpsLocationHelper {
 
             locationManager.requestSingleUpdate(provider, locationListener, Looper.getMainLooper())
 
-            // Fallback timeout in 5 seconds if single update doesn't return
             Handler(Looper.getMainLooper()).postDelayed({
                 try {
                     locationManager.removeUpdates(locationListener)
-                } catch (e: Exception) {
-                    // Ignore cleanup exception
-                }
+                } catch (e: Exception) { }
                 if (lastKnown != null) {
                     val address = resolveAddress(context, lastKnown.latitude, lastKnown.longitude)
                     onLocationReceived(
@@ -116,9 +221,6 @@ object GpsLocationHelper {
                     onError("No se obtuvo fijación GPS a tiempo. Reintenta al aire libre.")
                 }
             }, 5000)
-
-        } catch (e: SecurityException) {
-            onError("Error de seguridad al acceder al sensor GPS: ${e.message}")
         } catch (e: Exception) {
             onError("Error obteniendo ubicación GPS real: ${e.message}")
         }

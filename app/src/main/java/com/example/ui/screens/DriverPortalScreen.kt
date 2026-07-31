@@ -44,6 +44,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.location.LocationCallback
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -97,14 +100,60 @@ fun DriverPortalScreen(
     val voiceAssistant = remember { VoiceAssistantHelper(context) }
     var isVoiceEnabled by remember { mutableStateOf(true) }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            voiceAssistant.shutdown()
+    var driverGpsAddress by remember { mutableStateOf("Coordenadas GPS no capturadas") }
+    var isFetchingGps by remember { mutableStateOf(false) }
+    var locationCallbackRef by remember { mutableStateOf<LocationCallback?>(null) }
+
+    val driverLocationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val isGranted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (isGranted) {
+            isFetchingGps = true
+            GpsLocationHelper.getCurrentRealGpsLocation(
+                context = context,
+                onLocationReceived = { gpsLoc ->
+                    isFetchingGps = false
+                    driverGpsAddress = gpsLoc.formattedAddress
+                    Toast.makeText(context, "GPS Socio Obtenido: ${gpsLoc.formattedAddress}", Toast.LENGTH_SHORT).show()
+                },
+                onError = { err ->
+                    isFetchingGps = false
+                    Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                }
+            )
+            locationCallbackRef = GpsLocationHelper.startRealTimeLocationUpdates(
+                context = context,
+                intervalMs = 4000L,
+                onLocationUpdate = { gpsLoc ->
+                    driverGpsAddress = gpsLoc.formattedAddress
+                },
+                onError = { }
+            )
+        } else {
+            Toast.makeText(context, "Permisos de ubicación denegados para el Conductor.", Toast.LENGTH_SHORT).show()
         }
     }
 
-    var driverGpsAddress by remember { mutableStateOf("Coordenadas GPS no capturadas") }
-    var isFetchingGps by remember { mutableStateOf(false) }
+    DisposableEffect(Unit) {
+        if (GpsLocationHelper.hasLocationPermission(context)) {
+            locationCallbackRef = GpsLocationHelper.startRealTimeLocationUpdates(
+                context = context,
+                intervalMs = 4000L,
+                onLocationUpdate = { gpsLoc ->
+                    driverGpsAddress = gpsLoc.formattedAddress
+                },
+                onError = { }
+            )
+        }
+        onDispose {
+            voiceAssistant.shutdown()
+            locationCallbackRef?.let { cb ->
+                GpsLocationHelper.stopRealTimeLocationUpdates(context, cb)
+            }
+        }
+    }
 
     var showRegistrationForm by remember { mutableStateOf(false) }
 
@@ -288,19 +337,28 @@ fun DriverPortalScreen(
 
                     OutlinedButton(
                         onClick = {
-                            isFetchingGps = true
-                            GpsLocationHelper.getCurrentRealGpsLocation(
-                                context = context,
-                                onLocationReceived = { gpsLoc ->
-                                    isFetchingGps = false
-                                    driverGpsAddress = gpsLoc.formattedAddress
-                                    Toast.makeText(context, "GPS Socio Actualizado: ${gpsLoc.formattedAddress}", Toast.LENGTH_SHORT).show()
-                                },
-                                onError = { err ->
-                                    isFetchingGps = false
-                                    Toast.makeText(context, err, Toast.LENGTH_LONG).show()
-                                }
-                            )
+                            if (GpsLocationHelper.hasLocationPermission(context)) {
+                                isFetchingGps = true
+                                GpsLocationHelper.getCurrentRealGpsLocation(
+                                    context = context,
+                                    onLocationReceived = { gpsLoc ->
+                                        isFetchingGps = false
+                                        driverGpsAddress = gpsLoc.formattedAddress
+                                        Toast.makeText(context, "GPS Socio Actualizado: ${gpsLoc.formattedAddress}", Toast.LENGTH_SHORT).show()
+                                    },
+                                    onError = { err ->
+                                        isFetchingGps = false
+                                        Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                                    }
+                                )
+                            } else {
+                                driverLocationPermissionLauncher.launch(
+                                    arrayOf(
+                                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                    )
+                                )
+                            }
                         },
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.testTag("btn_fetch_driver_gps")

@@ -47,6 +47,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -93,6 +95,30 @@ fun CustomerRequestScreen(
 
     var isHighDemand by remember { mutableStateOf(false) }
     var isFetchingGps by remember { mutableStateOf(false) }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val isGranted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (isGranted) {
+            isFetchingGps = true
+            GpsLocationHelper.getCurrentRealGpsLocation(
+                context = context,
+                onLocationReceived = { gpsLoc ->
+                    isFetchingGps = false
+                    originAddress = gpsLoc.formattedAddress
+                    Toast.makeText(context, "GPS Obtenido: ${gpsLoc.formattedAddress}", Toast.LENGTH_SHORT).show()
+                },
+                onError = { err ->
+                    isFetchingGps = false
+                    Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                }
+            )
+        } else {
+            Toast.makeText(context, "Permiso de GPS denegado por el usuario.", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     // Payment method & payer selection
     val payerOptions = listOf("Paga quien envía", "Paga quien recibe")
@@ -207,19 +233,28 @@ fun CustomerRequestScreen(
 
                     OutlinedButton(
                         onClick = {
-                            isFetchingGps = true
-                            GpsLocationHelper.getCurrentRealGpsLocation(
-                                context = context,
-                                onLocationReceived = { gpsLoc ->
-                                    isFetchingGps = false
-                                    originAddress = gpsLoc.formattedAddress
-                                    Toast.makeText(context, "GPS Obtenido: ${gpsLoc.formattedAddress}", Toast.LENGTH_SHORT).show()
-                                },
-                                onError = { err ->
-                                    isFetchingGps = false
-                                    Toast.makeText(context, err, Toast.LENGTH_LONG).show()
-                                }
-                            )
+                            if (GpsLocationHelper.hasLocationPermission(context)) {
+                                isFetchingGps = true
+                                GpsLocationHelper.getCurrentRealGpsLocation(
+                                    context = context,
+                                    onLocationReceived = { gpsLoc ->
+                                        isFetchingGps = false
+                                        originAddress = gpsLoc.formattedAddress
+                                        Toast.makeText(context, "GPS Obtenido: ${gpsLoc.formattedAddress}", Toast.LENGTH_SHORT).show()
+                                    },
+                                    onError = { err ->
+                                        isFetchingGps = false
+                                        Toast.makeText(context, err, Toast.LENGTH_LONG).show()
+                                    }
+                                )
+                            } else {
+                                locationPermissionLauncher.launch(
+                                    arrayOf(
+                                        android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                        android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                    )
+                                )
+                            }
                         },
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.testTag("btn_fetch_client_gps")
