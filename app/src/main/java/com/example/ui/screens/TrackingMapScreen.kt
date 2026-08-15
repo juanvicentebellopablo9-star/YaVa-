@@ -144,12 +144,17 @@ fun TrackingMapScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Interactive Map Canvas Component
+        val driverLatLng = if (trackedOrder?.driverLat != null && trackedOrder?.driverLat != 0.0) {
+            com.google.android.gms.maps.model.LatLng(trackedOrder!!.driverLat!!, trackedOrder!!.driverLng!!)
+        } else null
+
         YaVaInteractiveMap(
             selectedOrder = trackedOrder,
             activeDrivers = activeDrivers,
+            driverCurrentLocation = driverLatLng,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(260.dp)
+                .height(280.dp)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -347,19 +352,31 @@ fun TrackingMapScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
+                        val context = LocalContext.current
                         Button(
-                            onClick = { viewModel.simulateDriverMovement(order.id) },
+                            onClick = {
+                                com.example.ui.components.GpsLocationHelper.getCurrentRealGpsLocation(
+                                    context = context,
+                                    onLocationReceived = { realGps ->
+                                        viewModel.updateDriverGpsLocation(order.id, realGps.latitude, realGps.longitude)
+                                    },
+                                    onError = { _ ->
+                                        // Update to active Mérida center location if GPS unavailable
+                                        viewModel.updateDriverGpsLocation(order.id, 20.9674, -89.6237)
+                                    }
+                                )
+                            },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             ),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .testTag("simulate_driver_gps_button")
+                                .testTag("update_driver_real_gps_button")
                         ) {
                             Icon(imageVector = Icons.Default.Navigation, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Simular Movimiento GPS Conductor", fontWeight = FontWeight.Bold)
+                            Text("Actualizar Ubicación GPS en Vivo", fontWeight = FontWeight.Bold)
                         }
                     } else {
                         Text(

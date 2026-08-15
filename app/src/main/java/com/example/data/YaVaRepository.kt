@@ -83,7 +83,7 @@ class YaVaRepository(
             weightKg = weightKg,
             distanceKm = quote.distanceKm,
             priceMxn = quote.finalPriceMxn,
-            isCustomQuote = quote.isCustomQuote,
+            isCustomQuote = quote.distanceKm > 25.0,
             notes = notes,
             payer = payer,
             paymentMethod = paymentMethod,

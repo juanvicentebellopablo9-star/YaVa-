@@ -19,18 +19,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsBike
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Storefront
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Engineering
 import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -38,15 +33,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,7 +51,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
-import com.example.ui.components.WhatsAppButton
 import com.example.ui.components.YaVaContactCard
 import com.example.ui.theme.YaVaYellowPrimary
 import com.example.ui.viewmodel.UserRole
@@ -71,38 +61,26 @@ fun HomeScreen(
     viewModel: YaVaViewModel,
     onNavigateToRequest: () -> Unit,
     onNavigateToTracking: () -> Unit,
-    onNavigateToDriverPortal: () -> Unit,
-    onNavigateToAdmin: () -> Unit
+    onNavigateToDriverPortal: () -> Unit
 ) {
-    val calcDistance by viewModel.calcDistanceKm.collectAsState()
-    val quote by viewModel.currentQuote.collectAsState()
-
-    var showTermsPdfDialog by remember { mutableStateOf(false) }
-
-    if (showTermsPdfDialog) {
-        com.example.ui.components.TermsAndConditionsPdfDialog(
-            onDismiss = { showTermsPdfDialog = false }
-        )
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        // Hero Section Banner Card
+        // Minimalist Hero Section Banner
         Card(
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(180.dp)
+                        .height(150.dp)
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.yava_hero_banner_1785394303763),
@@ -118,18 +96,18 @@ fun HomeScreen(
                     Column(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
-                            .padding(20.dp)
+                            .padding(16.dp)
                     ) {
                         Surface(
                             color = YaVaYellowPrimary,
                             shape = RoundedCornerShape(6.dp)
                         ) {
                             Text(
-                                text = "LOGÍSTICA BAJO DEMANDA",
+                                text = "TARIFA AUTOMÁTICA \$9 MXN / KM",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = Color.Black,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                             )
                         }
                         Spacer(modifier = Modifier.height(6.dp))
@@ -138,21 +116,21 @@ fun HomeScreen(
                                 painter = painterResource(id = R.drawable.img_app_logo_1785438590813),
                                 contentDescription = "Logo YaVa!",
                                 modifier = Modifier
-                                    .size(54.dp)
+                                    .size(44.dp)
                                     .clip(CircleShape)
                                     .border(2.dp, YaVaYellowPrimary, CircleShape)
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
                                     text = "YaVa!",
-                                    fontSize = 32.sp,
+                                    fontSize = 26.sp,
                                     fontWeight = FontWeight.Black,
                                     color = Color.White
                                 )
                                 Text(
                                     text = "\"Acelerando Tus Sueños\"",
-                                    fontSize = 15.sp,
+                                    fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = YaVaYellowPrimary
                                 )
@@ -161,438 +139,133 @@ fun HomeScreen(
                     }
                 }
 
-                Column(modifier = Modifier.padding(20.dp)) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Recolección y entrega veloz de paquetes locales de hasta 20 kg con seguimiento en tiempo real y tarifa fija por distancia.",
+                        text = "Envíos locales inmediatos calculados automáticamente a \$9 MXN por kilómetro recorrido.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    // Primary Action Buttons
+                    // Primary Action Button
                     Button(
                         onClick = onNavigateToRequest,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = YaVaYellowPrimary,
                             contentColor = Color.Black
                         ),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp)
+                            .height(48.dp)
                             .testTag("action_solicitar_envio_button")
                     ) {
                         Icon(imageVector = Icons.Default.LocalShipping, contentDescription = null)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text("Solicitar Envío Ya!", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Solicitar Envío Ahora", fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    OutlinedButton(
+                        onClick = {
+                            viewModel.setRole(UserRole.CONDUCTOR)
+                            onNavigateToDriverPortal()
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .testTag("action_ser_socio_button")
                     ) {
-                        OutlinedButton(
-                            onClick = {
-                                viewModel.setRole(UserRole.CONDUCTOR)
-                                onNavigateToDriverPortal()
-                            },
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                                .testTag("action_ser_socio_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.DirectionsBike,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Ser Socio Conductor", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
-
-                        OutlinedButton(
-                            onClick = {
-                                viewModel.setRole(UserRole.ADMIN)
-                                onNavigateToAdmin()
-                            },
-                            shape = RoundedCornerShape(14.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                                .testTag("action_registrar_negocio_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Storefront,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Registrar Negocio", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
+                        Icon(
+                            imageVector = Icons.Default.DirectionsBike,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Acceso Socio Repartidor", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Interactive Price Estimator / Cotizador Card
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Calculate,
-                        contentDescription = null,
-                        tint = YaVaYellowPrimary,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Cotizador Instantáneo",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Text(
-                    text = "Calcula el costo transparente de tu envío por distancia:",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Distancia: ${String.format("%.1f", calcDistance)} km",
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = quote.priceTierLabel,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = YaVaYellowPrimary
-                    )
-                }
-
-                Slider(
-                    value = calcDistance.toFloat(),
-                    onValueChange = { viewModel.updateCalcDistance(it.toDouble()) },
-                    valueRange = 1f..30f,
-                    steps = 28,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("home_calculator_slider")
-                )
-
-                // Pricing Reference Matrix Table
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    PriceChip("0-5 km", "\$50 MXN")
-                    PriceChip("5-10 km", "\$100 MXN")
-                    PriceChip("10-15 km", "\$130 MXN")
-                    PriceChip("15-20 km", "\$160 MXN")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = onNavigateToRequest,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Continuar con este cálculo", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // "Cómo Funciona" Step Guide
-        Text(
-            text = "Cómo Funciona YaVa!",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-
+        // Compact How It Works Guide
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            HowItWorksCard(
+            CompactFeatureChip(
                 step = "1",
-                title = "Cotiza",
-                desc = "Ingresa origen, destino y peso.",
-                icon = Icons.Default.Calculate,
+                title = "Origen y Destino",
+                desc = "Ingresa las direcciones",
                 modifier = Modifier.weight(1f)
             )
-            HowItWorksCard(
+            CompactFeatureChip(
                 step = "2",
-                title = "Asigna",
-                desc = "Conecta con Socio Conductor.",
-                icon = Icons.Default.DirectionsBike,
+                title = "Tarifa \$9/km",
+                desc = "Cálculo automático",
                 modifier = Modifier.weight(1f)
             )
-            HowItWorksCard(
+            CompactFeatureChip(
                 step = "3",
-                title = "Sigue",
-                desc = "Evidencia y mapa en vivo.",
-                icon = Icons.Default.Map,
+                title = "Rastreo GPS",
+                desc = "Sigue a tu repartidor",
                 modifier = Modifier.weight(1f)
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Value Proposition Benefits
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text(
-                    text = "Beneficios Exclusivos",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-
-                BenefitRow(
-                    icon = Icons.Default.Speed,
-                    title = "Velocidad Garantizada",
-                    subtitle = "Recolección en menos de 15 minutos en zonas activas."
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                BenefitRow(
-                    icon = Icons.Default.Shield,
-                    title = "Evidencia Digital Segura",
-                    subtitle = "Fotografía de entrega y validación por código QR."
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                BenefitRow(
-                    icon = Icons.Default.CheckCircle,
-                    title = "Tarifas Claras",
-                    subtitle = "Sin cargos ocultos ni sorpresas en el cálculo."
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Direct Contact Card
         YaVaContactCard(
             modifier = Modifier.fillMaxWidth(),
-            customMessage = "Hola YaVa!, quiero información o solicitar un envío."
+            customMessage = "Hola YaVa!, quiero solicitar información o un envío."
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Creator & Software Engineering Credits
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("creator_credits_card")
+        // Subtle Attribution Footer
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(YaVaYellowPrimary)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Code,
-                                contentDescription = null,
-                                tint = Color.Black,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "Liderazgo & Arquitectura de Software",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "Juan Vicente Bello Pablo",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-
-                    Surface(
-                        color = Color(0xFF1976D2).copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Verified,
-                                contentDescription = null,
-                                tint = Color(0xFF1976D2),
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Creador",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color(0xFF1976D2)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Text(
-                    text = "Director, Planificador, Desarrollador, Ingeniero y Arquitecto de Software Principal de la Plataforma Logística YaVa! Express.",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    lineHeight = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(text = "Director", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = YaVaYellowPrimary)
-                            Text(text = "Estrategia", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(text = "Arquitecto", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = YaVaYellowPrimary)
-                            Text(text = "Sistemas", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(text = "Ingeniero", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = YaVaYellowPrimary)
-                            Text(text = "Desarrollo", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Button(
-                    onClick = { showTermsPdfDialog = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = YaVaYellowPrimary, contentColor = Color.Black),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("btn_open_terms_pdf_dialog")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Description,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Ver Términos y Condiciones PDF (Mérida, YUC)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
-            }
+            Text(
+                text = "By: Ingeniero Vicente Bello",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier.testTag("subtle_attribution_footer")
+            )
         }
 
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
 @Composable
-private fun PriceChip(distance: String, price: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = distance, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text = price, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = YaVaYellowPrimary)
-    }
-}
-
-@Composable
-private fun HowItWorksCard(
+private fun CompactFeatureChip(
     step: String,
     title: String,
     desc: String,
-    icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         modifier = modifier
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(24.dp)
                     .clip(CircleShape)
                     .background(YaVaYellowPrimary)
             ) {
@@ -600,53 +273,23 @@ private fun HowItWorksCard(
                     text = step,
                     fontWeight = FontWeight.Black,
                     color = Color.Black,
-                    fontSize = 14.sp
+                    fontSize = 12.sp
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = title,
                 fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
+                fontSize = 11.sp,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = desc,
-                fontSize = 10.sp,
+                fontSize = 9.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                lineHeight = 12.sp
+                textAlign = TextAlign.Center
             )
         }
     }
 }
 
-@Composable
-private fun BenefitRow(icon: ImageVector, title: String, subtitle: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(YaVaYellowPrimary.copy(alpha = 0.2f))
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = YaVaYellowPrimary,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
-        Column {
-            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            Text(
-                text = subtitle,
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}

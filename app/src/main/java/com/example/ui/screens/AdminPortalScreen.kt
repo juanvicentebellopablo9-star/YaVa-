@@ -168,10 +168,10 @@ fun AdminPortalScreen(
             0 -> AdminOverviewTab(
                 insights = araInsights,
                 pendingDriversCount = pendingDrivers.size,
-                isWeatherSurgeActive = viewModel.isDirectorWeatherSurgeActive.collectAsState().value,
-                onToggleWeatherSurge = { enabled -> viewModel.setDirectorWeatherSurge(enabled) },
-                isHighDemandActive = viewModel.isHighDemandActive.collectAsState().value,
-                onToggleHighDemand = { enabled -> viewModel.setHighDemandActive(enabled) }
+                isWeatherSurgeActive = false,
+                onToggleWeatherSurge = { },
+                isHighDemandActive = false,
+                onToggleHighDemand = { }
             )
             1 -> DriverManagementTab(allDrivers, onSetStatus = { id, status -> viewModel.setDriverStatusByAdmin(id, status) })
             2 -> CompanyConfigAdminTab(companyConfig) { w, p, e, fn, fu, h, em ->
