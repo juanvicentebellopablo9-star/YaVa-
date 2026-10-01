@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -58,6 +59,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.OrderEntity
+import com.example.ui.components.YaVaInteractiveMap
 import com.example.data.PricingCalculator
 import com.example.ui.components.GpsLocationHelper
 import com.example.ui.components.YaVaContactCard
@@ -83,15 +86,19 @@ fun CustomerRequestScreen(
     onOrderCreatedAndTrack: () -> Unit
 ) {
     val context = LocalContext.current
+    val authenticatedName by viewModel.authenticatedUserName.collectAsState()
+    val authenticatedEmail by viewModel.authenticatedUserEmail.collectAsState()
+    val isHighDemand by viewModel.isHighDemandActive.collectAsState()
+    val isWeatherSurge by viewModel.isWeatherSurgeActive.collectAsState()
 
-    var clientName by remember { mutableStateOf("Ana Paula Martínez") }
-    var clientPhone by remember { mutableStateOf("+52 55 9876 5432") }
-    var clientEmail by remember { mutableStateOf("anapaula@ejemplo.com") }
-    var originAddress by remember { mutableStateOf("Paseo de Montejo, Centro, Mérida, Yucatán") }
-    var destinationAddress by remember { mutableStateOf("Calle 7 No. 451, Altabrisa, Mérida, Yucatán") }
+    var clientName by remember(authenticatedName) { mutableStateOf(authenticatedName) }
+    var clientPhone by remember { mutableStateOf("") }
+    var clientEmail by remember(authenticatedEmail) { mutableStateOf(authenticatedEmail) }
+    var originAddress by remember { mutableStateOf("") }
+    var destinationAddress by remember { mutableStateOf("") }
 
-    var originLat by remember { mutableDoubleStateOf(20.9850) }
-    var originLng by remember { mutableDoubleStateOf(-89.6180) }
+    var originLat by remember { mutableDoubleStateOf(20.9674) }
+    var originLng by remember { mutableDoubleStateOf(-89.6237) }
     var destLat by remember { mutableDoubleStateOf(21.0188) }
     var destLng by remember { mutableDoubleStateOf(-89.5840) }
 
@@ -111,9 +118,9 @@ fun CustomerRequestScreen(
     var selectedType by remember { mutableStateOf(packageTypes[1]) }
     var expandedDropdown by remember { mutableStateOf(false) }
 
-    var weightKg by remember { mutableDoubleStateOf(3.5) }
-    var distanceKm by remember { mutableDoubleStateOf(6.2) }
-    var notes by remember { mutableStateOf("Entregar en portón negro de 9:00 a 18:00 h.") }
+    var weightKg by remember { mutableDoubleStateOf(2.0) }
+    var distanceKm by remember { mutableDoubleStateOf(5.0) }
+    var notes by remember { mutableStateOf("") }
 
     var isFetchingGps by remember { mutableStateOf(false) }
 
@@ -200,71 +207,103 @@ fun CustomerRequestScreen(
     val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
 
     val quote = PricingCalculator.calculateQuote(
-        distanceKm = distanceKm
+        distanceKm = distanceKm,
+        packageType = selectedType,
+        weightKg = weightKg,
+        isHighDemand = isHighDemand,
+        isWeatherSurge = isWeatherSurge
     )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Banner Header
         Surface(
             color = MaterialTheme.colorScheme.primaryContainer,
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(18.dp),
+            shadowElevation = 2.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
                 modifier = Modifier.padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.LocalShipping,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(32.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.LocalShipping,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Solicitud Directa de Envío Local",
+                        text = "Solicitud Directa de Envío",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = "Procesamiento inmediato de tu paquete con Socio Conductor YaVa! activo.",
-                        fontSize = 11.sp,
+                        text = "Cotización y asignación inmediata en Mérida con Socio YaVa!",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Client & Address Card
         Card(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text(
-                    text = "Datos del Cliente Remitente",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+            Column(modifier = Modifier.padding(18.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Datos del Remitente",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "PASO 1 DE 3",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
                     value = clientName,
                     onValueChange = { clientName = it },
                     label = { Text("Nombre Completo") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = YaVaYellowPrimary) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("input_client_name")
@@ -276,7 +315,9 @@ fun CustomerRequestScreen(
                     value = clientPhone,
                     onValueChange = { clientPhone = it },
                     label = { Text("Teléfono de Contacto") },
-                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
+                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = YaVaYellowPrimary) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("input_client_phone")
@@ -290,7 +331,7 @@ fun CustomerRequestScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Ubicación y Direcciones GPS",
+                        text = "Ruta & Coordenadas GPS",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -323,11 +364,11 @@ fun CustomerRequestScreen(
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.testTag("btn_fetch_client_gps")
                     ) {
-                        Icon(imageVector = Icons.Default.GpsFixed, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(imageVector = Icons.Default.GpsFixed, contentDescription = null, modifier = Modifier.size(15.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = if (isFetchingGps) "Obteniendo GPS..." else "Usar GPS Actual",
-                            fontSize = 11.sp,
+                            text = if (isFetchingGps) "Obteniendo..." else "GPS Actual",
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -498,13 +539,52 @@ fun CustomerRequestScreen(
                     if (isCalculatingDistance) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Calculando Ruta Real...", fontSize = 12.sp)
+                        Text("Calculando Ruta Real OSRM...", fontSize = 12.sp)
                     } else {
                         Icon(imageVector = Icons.Default.Route, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Calcular Distancia Real por GPS / Coordenadas", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Calcular y Trazar Ruta en Calles de Mérida", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Interactive Route Map Preview (Zero-API OpenStreetMap / Esri Satellite / OSRM)
+                val previewOrder = remember(originAddress, destinationAddress, originLat, originLng, destLat, destLng, distanceKm) {
+                    OrderEntity(
+                        id = 0,
+                        trackingCode = "VISTA-PREVIA",
+                        clientName = clientName.ifBlank { "Cliente" },
+                        clientPhone = clientPhone,
+                        originAddress = originAddress.ifBlank { "Origen (Toca mapa o busca)" },
+                        destinationAddress = destinationAddress.ifBlank { "Destino (Toca mapa o busca)" },
+                        originLat = originLat,
+                        originLng = originLng,
+                        destLat = destLat,
+                        destLng = destLng,
+                        packageType = selectedType,
+                        weightKg = weightKg,
+                        distanceKm = distanceKm,
+                        priceMxn = 0.0,
+                        status = "COTIZANDO",
+                        notes = notes
+                    )
+                }
+
+                YaVaInteractiveMap(
+                    selectedOrder = previewOrder,
+                    onPointSelected = { lat, lng ->
+                        destLat = lat
+                        destLng = lng
+                        destinationAddress = "Punto en mapa (${String.format(java.util.Locale.ROOT, "%.4f", lat)}, ${String.format(java.util.Locale.ROOT, "%.4f", lng)})"
+                        triggerRealDistanceCalculation()
+                    },
+                    showNavigationHud = false,
+                    enableSearchOverlay = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -581,37 +661,30 @@ fun CustomerRequestScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Live Distance & Price Calculation Card (Automatic $9 MXN / km)
+        // Live Distance & Dynamic Price Calculation Card
         Card(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text(
-                    text = "Cotización Automática",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
+            Column(modifier = Modifier.padding(18.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Distancia Estimada: ${String.format("%.1f", distanceKm)} km",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        text = "Cotización Dinámica Transparente",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
                     Surface(
                         color = YaVaYellowPrimary,
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = "Tarifa Base \$9 MXN / km",
+                            text = quote.priceTierLabel,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.Black,
                             fontSize = 11.sp,
@@ -620,9 +693,64 @@ fun CustomerRequestScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Open Route in Google Maps button
+                // Breakdown components
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Tarifa Base de Arranque:", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("\$${quote.baseFareMxn} MXN", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Componente Distancia (${String.format(java.util.Locale.US, "%.1f", quote.distanceKm)} km):", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("\$${quote.distanceFareMxn} MXN", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Componente Tiempo Tráfico (~${quote.estimatedTimeMinutes} min):", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("\$${quote.timeFareMxn} MXN", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                        if (quote.surchargesMxn > 0) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Recargos (Peso / Clima):", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("+\$${quote.surchargesMxn} MXN", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFE65100))
+                            }
+                        }
+                        if (quote.surgeMultiplier > 1.0) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Multiplicador Dinámico de Demanda:", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${String.format(java.util.Locale.US, "%.2fx", quote.surgeMultiplier)}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = YaVaYellowPrimary)
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Open Route in Navigation button
                 Button(
                     onClick = {
                         GpsLocationHelper.openGoogleMapsRoute(
@@ -644,7 +772,7 @@ fun CustomerRequestScreen(
                 ) {
                     Icon(imageVector = Icons.Default.Navigation, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("🗺️ Ver Ruta Real en Google Maps", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("🗺️ Ver Ruta Real en Mapa", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -654,7 +782,7 @@ fun CustomerRequestScreen(
                         .fillMaxWidth()
                         .background(
                             color = MaterialTheme.colorScheme.surface,
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(14.dp)
                         )
                         .padding(14.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -691,7 +819,7 @@ fun CustomerRequestScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Pago Socio: \$${quote.driverEarningsMxn} MXN",
+                            text = "Pago Socio (85%): \$${quote.driverEarningsMxn} MXN",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = YaVaGreenSuccess
@@ -701,13 +829,11 @@ fun CustomerRequestScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
         // Payment Method & Payer Selection Card
         Card(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(20.dp)) {

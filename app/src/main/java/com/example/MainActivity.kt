@@ -33,6 +33,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -73,9 +75,11 @@ import com.example.ui.screens.AdminPortalScreen
 import com.example.ui.screens.AuthGatewayScreen
 import com.example.ui.screens.CustomerRequestScreen
 import com.example.ui.screens.DriverPortalScreen
+import com.example.ui.screens.GeminiAiAssistantScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.MandatoryTermsGateScreen
 import com.example.ui.screens.TrackingMapScreen
+import androidx.compose.material.icons.filled.AutoAwesome
 import com.example.ui.theme.YaVaTheme
 import com.example.ui.theme.YaVaYellowPrimary
 import com.example.ui.viewmodel.UserRole
@@ -97,12 +101,22 @@ class MainActivity : ComponentActivity() {
 enum class ClientNavTab(val title: String, val icon: ImageVector, val testTag: String) {
     INICIO("Inicio", Icons.Default.Home, "tab_client_inicio"),
     SOLICITAR("Solicitar Envío", Icons.Default.LocalShipping, "tab_client_solicitar"),
-    RASTREO("Mis Envíos & Mapa", Icons.Default.Map, "tab_client_rastreo")
+    RASTREO("Mis Envíos & Mapa", Icons.Default.Map, "tab_client_rastreo"),
+    GEMINI_IA("Gemini IA", Icons.Default.AutoAwesome, "tab_client_gemini_ia")
 }
 
 enum class DriverNavTab(val title: String, val icon: ImageVector, val testTag: String) {
     PANEL("Pedidos Disponibles", Icons.Default.DirectionsBike, "tab_driver_panel"),
-    RASTREO_GPS("Navegación & Mapa", Icons.Default.Map, "tab_driver_map")
+    RASTREO_GPS("Navegación & Mapa", Icons.Default.Map, "tab_driver_map"),
+    GEMINI_IA("Gemini Asistente", Icons.Default.AutoAwesome, "tab_driver_gemini_ia")
+}
+
+enum class AdminNavTab(val title: String, val icon: ImageVector, val testTag: String) {
+    DIRECTOR("Director", Icons.Default.Shield, "tab_admin_portal"),
+    ENVIOS("Crear Envío", Icons.Default.LocalShipping, "tab_admin_orders"),
+    SOCIOS("Conductores", Icons.Default.DirectionsBike, "tab_admin_drivers"),
+    MAPA("Mapa en Vivo", Icons.Default.Map, "tab_admin_map"),
+    GEMINI_IA("ARA & Gemini", Icons.Default.AutoAwesome, "tab_admin_gemini")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -117,6 +131,8 @@ fun YaVaApp(viewModel: YaVaViewModel = viewModel()) {
 
     var selectedClientTab by remember { mutableIntStateOf(0) }
     var selectedDriverTab by remember { mutableIntStateOf(0) }
+    var selectedAdminTab by remember { mutableIntStateOf(0) }
+    var showRoleSwitcherMenu by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -147,141 +163,288 @@ fun YaVaApp(viewModel: YaVaViewModel = viewModel()) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 4.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    // Logo & Brand Badge
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth().padding(end = 12.dp)
+                        modifier = Modifier.weight(1f, fill = false)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .clip(CircleShape)
-                                    .background(YaVaYellowPrimary)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Speed,
-                                    contentDescription = null,
-                                    tint = Color.Black,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(YaVaYellowPrimary)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Speed,
+                                contentDescription = null,
+                                tint = Color.Black,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = "YaVa!",
+                                    style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Black,
-                                    fontSize = 18.sp,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                                Text(
-                                    text = if (currentRole == UserRole.CONDUCTOR) "Panel de Socio Repartidor" else "Portal de Cliente",
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = YaVaYellowPrimary
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(YaVaYellowPrimary)
+                                )
+                            }
+                            Text(
+                                text = when (currentRole) {
+                                    UserRole.ADMIN -> "Director General"
+                                    UserRole.CONDUCTOR -> "Socio Repartidor"
+                                    UserRole.CLIENTE -> "Portal Cliente"
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = YaVaYellowPrimary
+                            )
+                        }
+                    }
+
+                    // Role & Account Info in Top Bar
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box {
+                            Surface(
+                                onClick = { showRoleSwitcherMenu = true },
+                                shape = RoundedCornerShape(20.dp),
+                                color = when (currentRole) {
+                                    UserRole.ADMIN -> YaVaYellowPrimary
+                                    UserRole.CONDUCTOR -> Color(0xFF1E293B)
+                                    UserRole.CLIENTE -> YaVaYellowPrimary.copy(alpha = 0.15f)
+                                },
+                                border = androidx.compose.foundation.BorderStroke(
+                                    1.dp,
+                                    when (currentRole) {
+                                        UserRole.ADMIN -> YaVaYellowPrimary
+                                        UserRole.CONDUCTOR -> Color(0xFF334155)
+                                        UserRole.CLIENTE -> YaVaYellowPrimary.copy(alpha = 0.4f)
+                                    }
+                                ),
+                                modifier = Modifier.testTag("chip_role_selector")
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(6.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                when (currentRole) {
+                                                    UserRole.ADMIN -> Color.Black
+                                                    UserRole.CONDUCTOR -> Color(0xFF38BDF8)
+                                                    UserRole.CLIENTE -> YaVaYellowPrimary
+                                                }
+                                            )
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = when (currentRole) {
+                                            UserRole.ADMIN -> "Director"
+                                            UserRole.CONDUCTOR -> "Repartidor"
+                                            UserRole.CLIENTE -> "Cliente"
+                                        },
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = when (currentRole) {
+                                            UserRole.ADMIN -> Color.Black
+                                            UserRole.CONDUCTOR -> Color.White
+                                            UserRole.CLIENTE -> YaVaYellowPrimary
+                                        }
+                                    )
+                                }
+                            }
+
+                            DropdownMenu(
+                                expanded = showRoleSwitcherMenu,
+                                onDismissRequest = { showRoleSwitcherMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Director General (Admin)") },
+                                    leadingIcon = { Icon(Icons.Default.Shield, contentDescription = null, tint = YaVaYellowPrimary) },
+                                    onClick = {
+                                        viewModel.setRole(UserRole.ADMIN)
+                                        showRoleSwitcherMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Vista Cliente (Remitente)") },
+                                    leadingIcon = { Icon(Icons.Default.Home, contentDescription = null) },
+                                    onClick = {
+                                        viewModel.setRole(UserRole.CLIENTE)
+                                        showRoleSwitcherMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Vista Socio Repartidor") },
+                                    leadingIcon = { Icon(Icons.Default.DirectionsBike, contentDescription = null) },
+                                    onClick = {
+                                        viewModel.setRole(UserRole.CONDUCTOR)
+                                        showRoleSwitcherMenu = false
+                                    }
                                 )
                             }
                         }
 
-                        // Role & Account Info in Top Bar
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        Surface(
+                            onClick = { viewModel.logoutUser() },
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.testTag("btn_top_bar_logout")
                         ) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (currentRole == UserRole.CONDUCTOR) Color(0xFF1E293B) else YaVaYellowPrimary
-                            ) {
-                                Text(
-                                    text = if (currentRole == UserRole.CONDUCTOR) "Repartidor" else "Cliente",
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = if (currentRole == UserRole.CONDUCTOR) Color.White else Color.Black,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                )
-                            }
-
-                            IconButton(
-                                onClick = { viewModel.logoutUser() },
-                                modifier = Modifier.size(32.dp).testTag("btn_top_bar_logout")
-                            ) {
+                            Box(modifier = Modifier.padding(8.dp)) {
                                 Icon(
                                     imageVector = Icons.Default.ExitToApp,
                                     contentDescription = "Cerrar Sesión",
                                     tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(18.dp)
                                 )
                             }
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
+                }
+            }
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 12.dp,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                if (currentRole == UserRole.CLIENTE) {
-                    ClientNavTab.entries.forEachIndexed { index, tab ->
-                        NavigationBarItem(
-                            selected = selectedClientTab == index,
-                            onClick = { selectedClientTab = index },
-                            icon = { Icon(imageVector = tab.icon, contentDescription = tab.title) },
-                            label = {
-                                Text(
-                                    text = tab.title,
-                                    fontSize = 10.sp,
-                                    fontWeight = if (selectedClientTab == index) FontWeight.Bold else FontWeight.Normal
+                NavigationBar(
+                    containerColor = Color.Transparent,
+                    tonalElevation = 0.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    when (currentRole) {
+                        UserRole.CLIENTE -> {
+                            ClientNavTab.entries.forEachIndexed { index, tab ->
+                                NavigationBarItem(
+                                    selected = selectedClientTab == index,
+                                    onClick = { selectedClientTab = index },
+                                    icon = { Icon(imageVector = tab.icon, contentDescription = tab.title, modifier = Modifier.size(20.dp)) },
+                                    label = {
+                                        Text(
+                                            text = tab.title,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = if (selectedClientTab == index) FontWeight.Bold else FontWeight.Medium
+                                        )
+                                    },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = Color.Black,
+                                        selectedTextColor = YaVaYellowPrimary,
+                                        indicatorColor = YaVaYellowPrimary,
+                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    ),
+                                    modifier = Modifier.testTag(tab.testTag)
                                 )
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Color.Black,
-                                selectedTextColor = YaVaYellowPrimary,
-                                indicatorColor = YaVaYellowPrimary
-                            ),
-                            modifier = Modifier.testTag(tab.testTag)
-                        )
-                    }
-                } else {
-                    DriverNavTab.entries.forEachIndexed { index, tab ->
-                        NavigationBarItem(
-                            selected = selectedDriverTab == index,
-                            onClick = { selectedDriverTab = index },
-                            icon = { Icon(imageVector = tab.icon, contentDescription = tab.title) },
-                            label = {
-                                Text(
-                                    text = tab.title,
-                                    fontSize = 10.sp,
-                                    fontWeight = if (selectedDriverTab == index) FontWeight.Bold else FontWeight.Normal
+                            }
+                        }
+                        UserRole.CONDUCTOR -> {
+                            DriverNavTab.entries.forEachIndexed { index, tab ->
+                                NavigationBarItem(
+                                    selected = selectedDriverTab == index,
+                                    onClick = { selectedDriverTab = index },
+                                    icon = { Icon(imageVector = tab.icon, contentDescription = tab.title, modifier = Modifier.size(20.dp)) },
+                                    label = {
+                                        Text(
+                                            text = tab.title,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = if (selectedDriverTab == index) FontWeight.Bold else FontWeight.Medium
+                                        )
+                                    },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = Color.Black,
+                                        selectedTextColor = YaVaYellowPrimary,
+                                        indicatorColor = YaVaYellowPrimary,
+                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    ),
+                                    modifier = Modifier.testTag(tab.testTag)
                                 )
-                            },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Color.Black,
-                                selectedTextColor = YaVaYellowPrimary,
-                                indicatorColor = YaVaYellowPrimary
-                            ),
-                            modifier = Modifier.testTag(tab.testTag)
-                        )
+                            }
+                        }
+                        UserRole.ADMIN -> {
+                            AdminNavTab.entries.forEachIndexed { index, tab ->
+                                NavigationBarItem(
+                                    selected = selectedAdminTab == index,
+                                    onClick = { selectedAdminTab = index },
+                                    icon = { Icon(imageVector = tab.icon, contentDescription = tab.title, modifier = Modifier.size(20.dp)) },
+                                    label = {
+                                        Text(
+                                            text = tab.title,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = if (selectedAdminTab == index) FontWeight.Bold else FontWeight.Medium
+                                        )
+                                    },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = Color.Black,
+                                        selectedTextColor = YaVaYellowPrimary,
+                                        indicatorColor = YaVaYellowPrimary,
+                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    ),
+                                    modifier = Modifier.testTag(tab.testTag)
+                                )
+                            }
+                        }
                     }
                 }
             }
         },
         floatingActionButton = {
-            if (currentRole == UserRole.CLIENTE && selectedClientTab != 1) {
+            val shouldShowFab = (currentRole == UserRole.CLIENTE && selectedClientTab != 1) || (currentRole == UserRole.ADMIN && selectedAdminTab != 1)
+            if (shouldShowFab) {
                 FloatingActionButton(
-                    onClick = { selectedClientTab = 1 },
+                    onClick = {
+                        if (currentRole == UserRole.ADMIN) {
+                            selectedAdminTab = 1
+                        } else {
+                            selectedClientTab = 1
+                        }
+                    },
                     containerColor = YaVaYellowPrimary,
                     contentColor = Color.Black,
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = androidx.compose.material3.FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp),
                     modifier = Modifier.testTag("fab_quick_shipment")
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Nuevo Envío")
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Nuevo Envío", modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Nuevo Envío", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    }
                 }
             }
         },
@@ -292,24 +455,41 @@ fun YaVaApp(viewModel: YaVaViewModel = viewModel()) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            if (currentRole == UserRole.CLIENTE) {
-                when (selectedClientTab) {
-                    0 -> HomeScreen(
-                        viewModel = viewModel,
-                        onNavigateToRequest = { selectedClientTab = 1 },
-                        onNavigateToTracking = { selectedClientTab = 2 },
-                        onNavigateToDriverPortal = { }
-                    )
-                    1 -> CustomerRequestScreen(
-                        viewModel = viewModel,
-                        onOrderCreatedAndTrack = { selectedClientTab = 2 }
-                    )
-                    2 -> TrackingMapScreen(viewModel = viewModel)
+            when (currentRole) {
+                UserRole.CLIENTE -> {
+                    when (selectedClientTab) {
+                        0 -> HomeScreen(
+                            viewModel = viewModel,
+                            onNavigateToRequest = { selectedClientTab = 1 },
+                            onNavigateToTracking = { selectedClientTab = 2 },
+                            onNavigateToDriverPortal = { viewModel.setRole(UserRole.CONDUCTOR) }
+                        )
+                        1 -> CustomerRequestScreen(
+                            viewModel = viewModel,
+                            onOrderCreatedAndTrack = { selectedClientTab = 2 }
+                        )
+                        2 -> TrackingMapScreen(viewModel = viewModel)
+                        3 -> GeminiAiAssistantScreen(viewModel = viewModel)
+                    }
                 }
-            } else {
-                when (selectedDriverTab) {
-                    0 -> DriverPortalScreen(viewModel = viewModel)
-                    1 -> TrackingMapScreen(viewModel = viewModel)
+                UserRole.CONDUCTOR -> {
+                    when (selectedDriverTab) {
+                        0 -> DriverPortalScreen(viewModel = viewModel)
+                        1 -> TrackingMapScreen(viewModel = viewModel)
+                        2 -> GeminiAiAssistantScreen(viewModel = viewModel)
+                    }
+                }
+                UserRole.ADMIN -> {
+                    when (selectedAdminTab) {
+                        0 -> AdminPortalScreen(viewModel = viewModel)
+                        1 -> CustomerRequestScreen(
+                            viewModel = viewModel,
+                            onOrderCreatedAndTrack = { selectedAdminTab = 3 }
+                        )
+                        2 -> DriverPortalScreen(viewModel = viewModel)
+                        3 -> TrackingMapScreen(viewModel = viewModel)
+                        4 -> GeminiAiAssistantScreen(viewModel = viewModel)
+                    }
                 }
             }
         }

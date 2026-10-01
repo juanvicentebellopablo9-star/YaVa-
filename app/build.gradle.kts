@@ -3,6 +3,7 @@ import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesS
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
+  alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.google.devtools.ksp)
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
@@ -21,6 +22,7 @@ android {
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    manifestPlaceholders["MAPS_API_KEY"] = ""
   }
 
   signingConfigs {
@@ -64,6 +66,10 @@ android {
 secrets {
   propertiesFileName = ".env"
   defaultPropertiesFileName = ".env.example"
+  val envMapsKey = System.getenv("MAPS_API_KEY") ?: ""
+  if (!envMapsKey.startsWith("AIza")) {
+    ignoreList.add("MAPS_API_KEY")
+  }
 }
 
 googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }
@@ -97,7 +103,7 @@ dependencies {
   implementation(libs.converter.moshi)
   implementation(libs.firebase.ai)
   // Uncomment to use Firestore:
-  // implementation(libs.firebase.firestore)
+  implementation(libs.firebase.firestore)
 
   // Uncomment ALL FOUR of the following dependencies together to use Firebase Auth and Google
   // Sign-In via Credential Manager:
@@ -115,6 +121,9 @@ dependencies {
   implementation(libs.play.services.maps)
   implementation(libs.maps.compose)
   implementation(libs.retrofit)
+  implementation(libs.retrofit.converter.serialization)
+  implementation(libs.kotlinx.serialization.json)
+  implementation(libs.zxing.core)
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)

@@ -55,13 +55,16 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.RealtimeDeliveryProgressTracker
 import com.example.ui.components.WhatsAppButton
 import com.example.ui.components.YaVaContactCard
+import com.example.ui.components.YaVaGoogleMapsTracker
 import com.example.ui.components.YaVaInteractiveMap
 import com.example.ui.components.YaVaStatusTimeline
 import com.example.ui.theme.YaVaGreenSuccess
 import com.example.ui.theme.YaVaYellowPrimary
 import com.example.ui.viewmodel.YaVaViewModel
+import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun TrackingMapScreen(
@@ -71,14 +74,23 @@ fun TrackingMapScreen(
     val activeDrivers by viewModel.approvedDrivers.collectAsState()
     val selectedTrackingCode by viewModel.selectedTrackingCode.collectAsState()
     val trackedOrder by viewModel.trackedOrder.collectAsState()
+    val realtimeSnapshot by viewModel.senderRealtimeSnapshot.collectAsState()
 
     var searchInput by remember { mutableStateOf(selectedTrackingCode ?: "") }
     var showReceiptDialog by remember { mutableStateOf(false) }
+    var showQrDialog by remember { mutableStateOf(false) }
 
     if (showReceiptDialog && trackedOrder != null) {
         com.example.ui.components.OrderReceiptDialog(
             order = trackedOrder!!,
             onDismiss = { showReceiptDialog = false }
+        )
+    }
+
+    if (showQrDialog && trackedOrder != null) {
+        com.example.ui.components.YaVaQrDialog(
+            order = trackedOrder!!,
+            onDismiss = { showQrDialog = false }
         )
     }
 
@@ -143,28 +155,109 @@ fun TrackingMapScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Interactive Map Canvas Component
-        val driverLatLng = if (trackedOrder?.driverLat != null && trackedOrder?.driverLat != 0.0) {
-            com.google.android.gms.maps.model.LatLng(trackedOrder!!.driverLat!!, trackedOrder!!.driverLng!!)
-        } else null
+        // Map Mode Switcher Header - Vector HUD by default (zero crash, high performance native map)
+        var useGoogleMapsCompose by remember { mutableStateOf(false) }
 
-        YaVaInteractiveMap(
-            selectedOrder = trackedOrder,
-            activeDrivers = activeDrivers,
-            driverCurrentLocation = driverLatLng,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(280.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Mapa de Rastreo en Tiempo Real",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant
+            ) {
+                Row(modifier = Modifier.padding(2.dp)) {
+                    Surface(
+                        onClick = { useGoogleMapsCompose = true },
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (useGoogleMapsCompose) YaVaYellowPrimary else Color.Transparent,
+                        modifier = Modifier.testTag("tab_gmaps_compose")
+                    ) {
+                        Text(
+                            text = "Google Maps",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (useGoogleMapsCompose) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+
+                    Surface(
+                        onClick = { useGoogleMapsCompose = false },
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (!useGoogleMapsCompose) YaVaYellowPrimary else Color.Transparent,
+                        modifier = Modifier.testTag("tab_vector_canvas")
+                    ) {
+                        Text(
+                            text = "Vector HUD",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (!useGoogleMapsCompose) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        if (useGoogleMapsCompose) {
+            val driverGmsLatLng = if (trackedOrder?.driverLat != null && trackedOrder?.driverLat != 0.0) {
+                LatLng(trackedOrder!!.driverLat!!, trackedOrder!!.driverLng!!)
+            } else null
+
+            YaVaGoogleMapsTracker(
+                selectedOrder = trackedOrder,
+                activeDrivers = activeDrivers,
+                driverCurrentLocation = driverGmsLatLng,
+                onDriverLocationUpdated = { lat, lng ->
+                    trackedOrder?.id?.let { orderId ->
+                        viewModel.updateDriverGpsLocation(orderId, lat, lng)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(350.dp)
+            )
+        } else {
+            val driverLatLng = if (trackedOrder?.driverLat != null && trackedOrder?.driverLat != 0.0) {
+                com.example.ui.components.YaVaLatLng(trackedOrder!!.driverLat!!, trackedOrder!!.driverLng!!)
+            } else null
+
+            YaVaInteractiveMap(
+                selectedOrder = trackedOrder,
+                activeDrivers = activeDrivers,
+                driverCurrentLocation = driverLatLng,
+                showNavigationHud = true,
+                enableSearchOverlay = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(350.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         if (trackedOrder != null) {
             val order = trackedOrder!!
 
-            // Status Timeline
-            YaVaStatusTimeline(
-                currentStatus = order.status,
+            // Real-Time Delivery Tracker powered by Cloud Firestore Snapshots
+            RealtimeDeliveryProgressTracker(
+                order = order,
+                realtimeSnapshot = realtimeSnapshot,
+                onShowQr = { showQrDialog = true },
+                onShowReceipt = { showReceiptDialog = true },
+                onSimulateSnapshotAdvance = {
+                    viewModel.simulateDriverProgressStep(order.trackingCode)
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -442,6 +535,33 @@ fun TrackingMapScreen(
                                 )
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // QR Generation & Display Button
+                        Button(
+                            onClick = { showQrDialog = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = YaVaYellowPrimary,
+                                contentColor = Color.Black
+                            ),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("btn_show_tracking_qr")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.QrCode,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Ver Código QR y PIN de Entrega",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                        }
                     }
                 }
             }
@@ -457,3 +577,4 @@ fun TrackingMapScreen(
         Spacer(modifier = Modifier.height(30.dp))
     }
 }
+

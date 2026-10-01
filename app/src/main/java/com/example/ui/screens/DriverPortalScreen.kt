@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -64,6 +65,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.DriverEntity
 import com.example.data.OrderEntity
 import com.example.ui.components.DeliveryEvidenceDialog
+import com.example.ui.components.YaVaQrDialog
 import com.example.ui.components.GpsLocationHelper
 import com.example.ui.components.LegalConsentBox
 import com.example.ui.components.VoiceAssistantHelper
@@ -185,6 +187,7 @@ fun DriverPortalScreen(
 
     // Evidence Dialog state
     var evidenceOrderTarget by remember { mutableStateOf<OrderEntity?>(null) }
+    var qrOrderTarget by remember { mutableStateOf<OrderEntity?>(null) }
 
     val currentDriver = approvedDrivers.firstOrNull() ?: DriverEntity(
         id = 1,
@@ -688,6 +691,7 @@ fun DriverPortalScreen(
                 activeAssignedOrders.forEach { order ->
                     ActiveDriverDeliveryCard(
                         order = order,
+                        onShowQr = { qrOrderTarget = order },
                         onAdvanceStatus = {
                             if (order.status == "En camino") {
                                 evidenceOrderTarget = order
@@ -729,6 +733,13 @@ fun DriverPortalScreen(
                 }
                 evidenceOrderTarget = null
             }
+        )
+    }
+
+    if (qrOrderTarget != null) {
+        YaVaQrDialog(
+            order = qrOrderTarget!!,
+            onDismiss = { qrOrderTarget = null }
         )
     }
 }
@@ -824,6 +835,7 @@ private fun AvailableOrderCard(
 @Composable
 private fun ActiveDriverDeliveryCard(
     order: OrderEntity,
+    onShowQr: () -> Unit,
     onAdvanceStatus: () -> Unit,
     onConfirmPayment: (Long) -> Unit
 ) {
@@ -972,6 +984,26 @@ private fun ActiveDriverDeliveryCard(
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Navegar Destino", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Show Customer QR Button
+            OutlinedButton(
+                onClick = onShowQr,
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("driver_show_qr_${order.id}")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.QrCode,
+                    contentDescription = null,
+                    tint = YaVaYellowPrimary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Ver Código QR y PIN del Pedido", fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(10.dp))

@@ -22,7 +22,10 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.Locale
+import org.json.JSONObject
 
 data class RealGpsLocation(
     val latitude: Double,
@@ -188,20 +191,67 @@ object GpsLocationHelper {
             if (oLat == 0.0) { oLat = 20.9674; oLng = -89.6237 }
             if (dLat == 0.0) { dLat = 21.0188; dLng = -89.5840 }
 
-            val results = FloatArray(1)
-            Location.distanceBetween(oLat, oLng, dLat, dLng, results)
-            val straightLineMeters = results[0]
+            // Try Open Source Routing Machine (OSRM) driving network calculation
+            var calculatedKm: Double? = null
+            try {
+                val osrmUrl = URL("https://router.project-osrm.org/route/v1/driving/$oLng,$oLat;$dLng,$dLat?overview=false")
+                val conn = osrmUrl.openConnection() as HttpURLConnection
+                conn.connectTimeout = 3000
+                conn.readTimeout = 3000
+                conn.requestMethod = "GET"
+                conn.setRequestProperty("User-Agent", "YaVaLogisticsApp/1.0")
+                if (conn.responseCode == 200) {
+                    val response = conn.inputStream.bufferedReader().use { it.readText() }
+                    val json = JSONObject(response)
+                    if (json.optString("code") == "Ok") {
+                        val routes = json.getJSONArray("routes")
+                        if (routes.length() > 0) {
+                            val route = routes.getJSONObject(0)
+                            val meters = route.getDouble("distance")
+                            calculatedKm = (meters / 1000.0).coerceAtLeast(1.0)
+                        }
+                    }
+                }
+                conn.disconnect()
+            } catch (_: Exception) {}
 
-            val drivingMeters = straightLineMeters * 1.25
-            val km = (drivingMeters / 1000.0).coerceAtLeast(1.0)
-            val roundedKm = Math.round(km * 10.0) / 10.0
+            val finalKm = calculatedKm ?: run {
+                val results = FloatArray(1)
+                Location.distanceBetween(oLat, oLng, dLat, dLng, results)
+                val straightLineMeters = results[0]
+                val drivingMeters = straightLineMeters * 1.25
+                (drivingMeters / 1000.0).coerceAtLeast(1.0)
+            }
 
-            val routeUrl = "https://www.google.com/maps/dir/?api=1&origin=$oLat,$oLng&destination=$dLat,$dLng&travelmode=driving"
+            val roundedKm = Math.round(finalKm * 10.0) / 10.0
+            val routeUrl = "geo:0,0?q=$dLat,$dLng(Entrega YaVa)"
 
             Handler(Looper.getMainLooper()).post {
                 onResult(roundedKm, routeUrl, oLat, oLng, dLat, dLng)
             }
         }.start()
+    }
+
+    fun openNavigationRoute(
+        context: Context,
+        originLat: Double,
+        originLng: Double,
+        destLat: Double,
+        destLng: Double,
+        destLabel: String = "Entrega YaVa!"
+    ) {
+        try {
+            val uri = Uri.parse("geo:0,0?q=$destLat,$destLng(${Uri.encode(destLabel)})")
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            try {
+                val webUri = Uri.parse("https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=$originLat%2C$originLng%3B$destLat%2C$destLng")
+                context.startActivity(Intent(Intent.ACTION_VIEW, webUri))
+            } catch (_: Exception) {
+                Toast.makeText(context, "No se encontró aplicación de navegación", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     fun openGoogleMapsRoute(
@@ -211,19 +261,7 @@ object GpsLocationHelper {
         destLat: Double,
         destLng: Double
     ) {
-        try {
-            val uri = Uri.parse("https://www.google.com/maps/dir/?api=1&origin=$originLat,$originLng&destination=$destLat,$destLng&travelmode=driving")
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            intent.setPackage("com.google.android.apps.maps")
-            if (intent.resolveActivity(context.packageManager) != null) {
-                context.startActivity(intent)
-            } else {
-                val webIntent = Intent(Intent.ACTION_VIEW, uri)
-                context.startActivity(webIntent)
-            }
-        } catch (e: Exception) {
-            Toast.makeText(context, "No se pudo abrir Google Maps", Toast.LENGTH_SHORT).show()
-        }
+        openNavigationRoute(context, originLat, originLng, destLat, destLng)
     }
 
     fun hasLocationPermission(context: Context): Boolean {

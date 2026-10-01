@@ -22,6 +22,8 @@ class YaVaRepository(
 
     fun observeOrderByTracking(code: String): Flow<OrderEntity?> = orderDao.observeOrderByTrackingCode(code)
 
+    suspend fun getOrderById(id: Long): OrderEntity? = orderDao.getOrderById(id)
+
     fun getOrdersByDriver(driverId: Long): Flow<List<OrderEntity>> = orderDao.getOrdersByDriver(driverId)
 
     suspend fun saveCompanyConfig(config: CompanyConfigEntity) {
@@ -61,12 +63,20 @@ class YaVaRepository(
         notes: String,
         payer: String = "Paga quien envía",
         paymentMethod: String = "EFECTIVO",
-        originLat: Double = 19.4326,
-        originLng: Double = -99.1332,
-        destLat: Double = 19.4265,
-        destLng: Double = -99.1678
+        originLat: Double = 20.9674,
+        originLng: Double = -89.6237,
+        destLat: Double = 21.0188,
+        destLng: Double = -89.5840,
+        isHighDemand: Boolean = false,
+        isWeatherSurge: Boolean = false
     ): OrderEntity {
-        val quote = PricingCalculator.calculateQuote(distanceKm)
+        val quote = PricingCalculator.calculateQuote(
+            distanceKm = distanceKm,
+            packageType = packageType,
+            weightKg = weightKg,
+            isHighDemand = isHighDemand,
+            isWeatherSurge = isWeatherSurge
+        )
         val trackingCode = "YAVA-${Random.nextInt(10000, 99999)}"
 
         val newOrder = OrderEntity(
@@ -82,7 +92,14 @@ class YaVaRepository(
             packageType = packageType,
             weightKg = weightKg,
             distanceKm = quote.distanceKm,
+            estimatedTimeMinutes = quote.estimatedTimeMinutes,
             priceMxn = quote.finalPriceMxn,
+            baseFareMxn = quote.baseFareMxn,
+            distanceFareMxn = quote.distanceFareMxn,
+            timeFareMxn = quote.timeFareMxn,
+            surgeMultiplier = quote.surgeMultiplier,
+            platformCommissionMxn = quote.platformCommissionAmountMxn,
+            driverEarningsMxn = quote.driverEarningsMxn,
             isCustomQuote = quote.distanceKm > 25.0,
             notes = notes,
             payer = payer,
@@ -184,124 +201,8 @@ class YaVaRepository(
     }
 
     suspend fun seedInitialDataIfEmpty() {
-        val currentOrders = allOrders.firstOrNull() ?: emptyList()
-        if (currentOrders.isEmpty()) {
-            // Seed sample Drivers
-            val driver1Id = driverDao.insertDriver(
-                DriverEntity(
-                    fullName = "Carlos Mendoza",
-                    phone = "+52 55 1234 5678",
-                    vehicle = "Motocicleta Electric 2024",
-                    zone = "Centro",
-                    isApproved = true,
-                    isAvailable = true,
-                    rating = 4.9f,
-                    totalDeliveries = 142
-                )
-            )
-
-            val driver2Id = driverDao.insertDriver(
-                DriverEntity(
-                    fullName = "Valeria Ramos",
-                    phone = "+52 55 8765 4321",
-                    vehicle = "Auto Sedan Hybrid",
-                    zone = "Norte",
-                    isApproved = true,
-                    isAvailable = true,
-                    rating = 4.8f,
-                    totalDeliveries = 89
-                )
-            )
-
-            // Pending Driver Application
-            driverDao.insertDriver(
-                DriverEntity(
-                    fullName = "Jorge Luis Hernández",
-                    phone = "+52 55 9988 7766",
-                    vehicle = "Camioneta Ligera",
-                    zone = "Sur",
-                    isApproved = false,
-                    isAvailable = true,
-                    rating = 5.0f,
-                    totalDeliveries = 0
-                )
-            )
-
-            // Seed Sample Orders
-            orderDao.insertOrder(
-                OrderEntity(
-                    trackingCode = "YAVA-58219",
-                    clientName = "María Fernández (Boutique Reforma)",
-                    clientPhone = "+52 55 4433 2211",
-                    originAddress = "Av. Paseo de la Reforma 222, Juarez, CDMX",
-                    destinationAddress = "Calle Durango 145, Roma Norte, CDMX",
-                    packageType = "Paquete Pequeño",
-                    weightKg = 2.5,
-                    distanceKm = 4.2,
-                    priceMxn = 50.0,
-                    notes = "Entregar en recepción boutique piso 3",
-                    status = "En camino",
-                    driverId = driver1Id,
-                    driverName = "Carlos Mendoza",
-                    driverPhone = "+52 55 1234 5678",
-                    driverLat = 19.4265,
-                    driverLng = -99.1678,
-                    createdAt = System.currentTimeMillis() - 1800000
-                )
-            )
-
-            orderDao.insertOrder(
-                OrderEntity(
-                    trackingCode = "YAVA-94102",
-                    clientName = "Roberto Gómez",
-                    clientPhone = "+52 55 1122 3344",
-                    originAddress = "Plaza Satélite, Naucalpan",
-                    destinationAddress = "Polanco III Secc, Miguel Hidalgo, CDMX",
-                    packageType = "Mediano",
-                    weightKg = 8.0,
-                    distanceKm = 12.8,
-                    priceMxn = 130.0,
-                    notes = "Caja frágil con electrónicos. Manejar con cuidado.",
-                    status = "Esperando conductor",
-                    createdAt = System.currentTimeMillis() - 600000
-                )
-            )
-
-            orderDao.insertOrder(
-                OrderEntity(
-                    trackingCode = "YAVA-33108",
-                    clientName = "Restaurante La Matilde",
-                    clientPhone = "+52 55 7766 5544",
-                    originAddress = "Av. Insurgentes Sur 1200, Del Valle",
-                    destinationAddress = "Calle Coyoacán 310, Del Valle Centro",
-                    packageType = "Documentos",
-                    weightKg = 0.8,
-                    distanceKm = 2.1,
-                    priceMxn = 50.0,
-                    notes = "Documentación contable en sobre cerrado.",
-                    status = "Entregado",
-                    driverId = driver2Id,
-                    driverName = "Valeria Ramos",
-                    driverPhone = "+52 55 8765 4321",
-                    deliveryPhotoUri = "sample_photo_proof",
-                    deliveryQrCode = "YAVA-33108-CONFIRMED",
-                    createdAt = System.currentTimeMillis() - 7200000
-                )
-            )
-
-            // Seed sample user
-            userDao.insertUser(
-                UserEntity(
-                    name = "Administrador YaVa!",
-                    phone = "+52 55 0000 1111",
-                    email = "admin@yava.app",
-                    role = "ADMIN",
-                    zone = "Centro"
-                )
-            )
-        }
-
-        // Seed Company Config if not present
+        // Only seed Company Configuration if not present.
+        // NO mock orders, NO dummy drivers, NO fake users are seeded into production flow.
         if (companyConfig.firstOrNull() == null) {
             companyConfigDao.saveCompanyConfig(CompanyConfigEntity())
         }

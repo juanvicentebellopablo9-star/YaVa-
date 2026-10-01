@@ -92,6 +92,7 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.theme.YaVaYellowPrimary
 import com.example.ui.viewmodel.UserRole
 import com.example.ui.viewmodel.YaVaViewModel
+import com.example.ui.components.DirectorLoginDialog
 
 enum class AuthScreenMode {
     LOGIN,
@@ -109,9 +110,25 @@ fun AuthGatewayScreen(
     var screenMode by remember { mutableStateOf(AuthScreenMode.LOGIN) }
 
     // Login Form State
-    var loginEmail by remember { mutableStateOf("cliente@yava.app") }
-    var loginPassword by remember { mutableStateOf("123456") }
+    var loginRole by remember { mutableStateOf(UserRole.CLIENTE) }
+    var loginEmail by remember { mutableStateOf("") }
+    var loginPassword by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
+    var showDirectorDialog by remember { mutableStateOf(false) }
+
+    if (showDirectorDialog) {
+        DirectorLoginDialog(
+            onDismiss = { showDirectorDialog = false },
+            onLoginSuccess = { email, _ ->
+                showDirectorDialog = false
+                viewModel.loginAsDirector(
+                    email = email.ifBlank { "juanvicentebellopablo9@gmail.com" },
+                    name = "Juan Vicente Bello Pablo"
+                )
+                true
+            }
+        )
+    }
 
     // Register Form State
     var registerRole by remember { mutableStateOf(UserRole.CLIENTE) }
@@ -125,7 +142,7 @@ fun AuthGatewayScreen(
     val companyConfig by viewModel.companyConfig.collectAsState()
     val whatsappNumber = companyConfig.whatsappNumber.ifEmpty { "529997431941" }
 
-    fun handleGoogleSignIn() {
+    fun handleGoogleSignIn(selectedRole: UserRole) {
         coroutineScope.launch {
             try {
                 val credentialManager = CredentialManager.create(context)
@@ -142,10 +159,16 @@ fun AuthGatewayScreen(
                 val credential = result.credential
                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
                 val googleIdToken = googleIdTokenCredential.idToken
-                viewModel.loginWithGoogle(googleIdToken)
+                viewModel.loginWithGoogle(googleIdToken, selectedRole)
             } catch (e: Exception) {
-                // Fallback to direct Firebase Auth anonymous or standard sign-in
-                viewModel.loginWithGoogle(null)
+                // If Google Play Services is unavailable or credential flow cancelled, notify gracefully
+                val errorMsg = e.localizedMessage ?: "No se completó el acceso con Google"
+                // Fallback for direct sandbox demo testing if Google Play services is missing in container
+                if (errorMsg.contains("16") || errorMsg.contains("No credential") || errorMsg.contains("unavailable", ignoreCase = true)) {
+                    viewModel.loginWithGoogle(null, selectedRole)
+                } else {
+                    Toast.makeText(context, "Google Sign-In: $errorMsg", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
@@ -250,19 +273,120 @@ fun AuthGatewayScreen(
                             textAlign = TextAlign.Center
                         )
                         Text(
-                            text = "Ingresa tus credenciales para administrar tus envíos o iniciar rutas de reparto.",
+                            text = "Accede a tu cuenta YaVa! Logistics para gestionar envíos o activar tu jornada de reparto.",
                             fontSize = 12.sp,
                             color = Color.Gray,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        // Google Sign-In Button
+                        // ROLE SELECTION TABS FOR LOGIN
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(modifier = Modifier.padding(4.dp)) {
+                                Surface(
+                                    onClick = { loginRole = UserRole.CLIENTE },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (loginRole == UserRole.CLIENTE) YaVaYellowPrimary else Color.Transparent,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("tab_login_sender")
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 10.dp),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = if (loginRole == UserRole.CLIENTE) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Remitente",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = if (loginRole == UserRole.CLIENTE) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    onClick = { loginRole = UserRole.CONDUCTOR },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (loginRole == UserRole.CONDUCTOR) YaVaYellowPrimary else Color.Transparent,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("tab_login_driver")
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 10.dp),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.DirectionsBike,
+                                            contentDescription = null,
+                                            tint = if (loginRole == UserRole.CONDUCTOR) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Conductor",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = if (loginRole == UserRole.CONDUCTOR) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+
+                                Surface(
+                                    onClick = {
+                                        loginRole = UserRole.ADMIN
+                                        if (loginEmail.isBlank()) loginEmail = "juanvicentebellopablo9@gmail.com"
+                                    },
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = if (loginRole == UserRole.ADMIN) YaVaYellowPrimary else Color.Transparent,
+                                    modifier = Modifier
+                                        .weight(0.95f)
+                                        .testTag("tab_login_director")
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 10.dp),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Shield,
+                                            contentDescription = null,
+                                            tint = if (loginRole == UserRole.ADMIN) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Director",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = if (loginRole == UserRole.ADMIN) Color.Black else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(18.dp))
+
+                        // Google Sign-In Button with Firebase Auth
                         Surface(
                             onClick = {
-                                handleGoogleSignIn()
+                                handleGoogleSignIn(loginRole)
                             },
                             shape = RoundedCornerShape(14.dp),
                             color = Color.White,
@@ -286,9 +410,9 @@ fun AuthGatewayScreen(
                                     )
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Text(
-                                        text = "Conectando con Google...",
+                                        text = "Conectando con Google & Firebase...",
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp,
+                                        fontSize = 13.sp,
                                         color = Color(0xFF3C4043)
                                     )
                                 } else {
@@ -308,9 +432,13 @@ fun AuthGatewayScreen(
                                     }
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(
-                                        text = "Acceder con cuenta de Google",
+                                        text = when (loginRole) {
+                                            UserRole.ADMIN -> "Continuar como Director con Google"
+                                            UserRole.CONDUCTOR -> "Continuar como Conductor con Google"
+                                            UserRole.CLIENTE -> "Continuar como Remitente con Google"
+                                        },
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp,
+                                        fontSize = 13.sp,
                                         color = Color(0xFF3C4043)
                                     )
                                 }
@@ -383,7 +511,7 @@ fun AuthGatewayScreen(
                         // Submit Login Button
                         Button(
                             onClick = {
-                                viewModel.loginUser(loginEmail, loginPassword)
+                                viewModel.loginUser(loginEmail, loginPassword, loginRole)
                             },
                             enabled = !isAuthLoading,
                             colors = ButtonDefaults.buttonColors(
@@ -411,9 +539,9 @@ fun AuthGatewayScreen(
                                     horizontalArrangement = Arrangement.Center
                                 ) {
                                     Text(
-                                        text = "Iniciar Sesión",
+                                        text = if (loginRole == UserRole.CONDUCTOR) "Iniciar como Conductor" else "Iniciar como Remitente",
                                         fontWeight = FontWeight.ExtraBold,
-                                        fontSize = 16.sp
+                                        fontSize = 15.sp
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Icon(imageVector = Icons.Default.ArrowForward, contentDescription = null)
@@ -423,9 +551,73 @@ fun AuthGatewayScreen(
 
                         Spacer(modifier = Modifier.height(18.dp))
 
-                        Divider(color = MaterialTheme.colorScheme.surfaceVariant)
+                        // QUICK DEMO ACCESS SECTION (For rapid evaluation)
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "⚡ Acceso Rápido de Prueba",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    OutlinedButton(
+                                        onClick = { viewModel.loginAsQuickSender() },
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .testTag("btn_quick_sender")
+                                    ) {
+                                        Text("Remitente", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    OutlinedButton(
+                                        onClick = { viewModel.loginAsQuickDriver() },
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .testTag("btn_quick_driver")
+                                    ) {
+                                        Text("Conductor", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    Button(
+                                        onClick = { showDirectorDialog = true },
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = YaVaYellowPrimary,
+                                            contentColor = Color.Black
+                                        ),
+                                        modifier = Modifier
+                                            .weight(1.05f)
+                                            .testTag("btn_quick_director")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Shield,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Text("Director", fontSize = 11.sp, fontWeight = FontWeight.Black)
+                                    }
+                                }
+                            }
+                        }
 
                         Spacer(modifier = Modifier.height(14.dp))
+
+                        Divider(color = MaterialTheme.colorScheme.surfaceVariant)
+
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         // Link to Registration Screen
                         TextButton(

@@ -14,27 +14,49 @@ private val YaVaDarkColorScheme = darkColorScheme(
     onPrimaryContainer = YaVaYellowLight,
     secondary = YaVaYellowLight,
     onSecondary = Color.Black,
+    secondaryContainer = YaVaSurfaceVariantDark,
+    onSecondaryContainer = YaVaTextDark,
+    tertiary = YaVaBlueInfo,
+    onTertiary = Color.White,
     background = YaVaBlack,
     onBackground = YaVaTextDark,
     surface = YaVaSurfaceDark,
     onSurface = YaVaTextDark,
     surfaceVariant = YaVaSurfaceVariantDark,
-    onSurfaceVariant = Color.LightGray
+    onSurfaceVariant = YaVaTextMutedDark,
+    surfaceTint = YaVaYellowPrimary,
+    outline = YaVaBorderDark,
+    outlineVariant = Color(0xFF383844),
+    error = YaVaRedAlert,
+    onError = Color.White,
+    errorContainer = YaVaRedContainer,
+    onErrorContainer = Color(0xFFFFDAD6)
 )
 
 private val YaVaLightColorScheme = lightColorScheme(
     primary = YaVaYellowDark,
     onPrimary = Color.Black,
-    primaryContainer = Color(0xFFFFF1B3),
-    onPrimaryContainer = Color(0xFF332B00),
+    primaryContainer = Color(0xFFFFF0B3),
+    onPrimaryContainer = Color(0xFF3B2F00),
     secondary = YaVaBlack,
     onSecondary = Color.White,
+    secondaryContainer = YaVaSurfaceVariantLight,
+    onSecondaryContainer = YaVaTextLight,
+    tertiary = YaVaBlueInfo,
+    onTertiary = Color.White,
     background = YaVaGrayLight,
     onBackground = YaVaTextLight,
     surface = YaVaSurfaceLight,
     onSurface = YaVaTextLight,
     surfaceVariant = YaVaSurfaceVariantLight,
-    onSurfaceVariant = Color.DarkGray
+    onSurfaceVariant = YaVaTextMutedLight,
+    surfaceTint = YaVaYellowDark,
+    outline = YaVaBorderLight,
+    outlineVariant = Color(0xFFD0D0D8),
+    error = YaVaRedAlert,
+    onError = Color.White,
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF93000A)
 )
 
 @Composable

@@ -26,7 +26,9 @@ import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Shield
+import com.example.ui.components.YaVaQrDialog
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -83,8 +85,11 @@ fun AdminPortalScreen(
     val companyConfig by viewModel.companyConfig.collectAsState()
     val legalConsents by viewModel.legalConsents.collectAsState()
     val araInsights by viewModel.araInsights.collectAsState()
+    val isHighDemandActive by viewModel.isHighDemandActive.collectAsState()
+    val isWeatherSurgeActive by viewModel.isWeatherSurgeActive.collectAsState()
 
     var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedOrderForQr by remember { mutableStateOf<OrderEntity?>(null) }
     val tabs = listOf("General", "Socios", "Empresa", "Legal", "Nube & Realtime", "Pedidos", "ARA Lucid")
 
     Column(
@@ -168,10 +173,10 @@ fun AdminPortalScreen(
             0 -> AdminOverviewTab(
                 insights = araInsights,
                 pendingDriversCount = pendingDrivers.size,
-                isWeatherSurgeActive = false,
-                onToggleWeatherSurge = { },
-                isHighDemandActive = false,
-                onToggleHighDemand = { }
+                isWeatherSurgeActive = isWeatherSurgeActive,
+                onToggleWeatherSurge = { viewModel.toggleWeatherSurge(it) },
+                isHighDemandActive = isHighDemandActive,
+                onToggleHighDemand = { viewModel.toggleHighDemand(it) }
             )
             1 -> DriverManagementTab(allDrivers, onSetStatus = { id, status -> viewModel.setDriverStatusByAdmin(id, status) })
             2 -> CompanyConfigAdminTab(companyConfig) { w, p, e, fn, fu, h, em ->
@@ -179,11 +184,22 @@ fun AdminPortalScreen(
             }
             3 -> LegalAuditAdminTab(legalConsents)
             4 -> CloudSyncAdminTab()
-            5 -> OrdersManagementTab(allOrders, onConfirmPayment = { id -> viewModel.confirmPaymentByDirector(id) })
+            5 -> OrdersManagementTab(
+                allOrders = allOrders,
+                onConfirmPayment = { id -> viewModel.confirmPaymentByDirector(id) },
+                onShowQr = { order -> selectedOrderForQr = order }
+            )
             6 -> AraSystemLucidAiTab(araInsights)
         }
 
         Spacer(modifier = Modifier.height(30.dp))
+    }
+
+    if (selectedOrderForQr != null) {
+        YaVaQrDialog(
+            order = selectedOrderForQr!!,
+            onDismiss = { selectedOrderForQr = null }
+        )
     }
 }
 
@@ -222,12 +238,12 @@ private fun AdminOverviewTab(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Tarifa por Alta Demanda / Hora Pico (Director)",
+                                text = "Multiplicador Dinámico por Alta Demanda (1.25x)",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Tarifa $9 MXN/km (20% Comisión) vs Baja Demanda $8 MXN/km (15% Comisión)",
+                                text = "Comisión de plataforma fija: 15% • Ganancias para socios repartidores: 85%",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -245,9 +261,9 @@ private fun AdminOverviewTab(
 
                 Text(
                     text = if (isHighDemandActive) {
-                        "🔥 ALTA DEMANDA ACTIVADA ($9 MXN/km): Comisión de plataforma ajustada a 20%, 80% ganancias para socios."
+                        "🔥 ALTA DEMANDA ACTIVADA (Multiplicador 1.25x): Mayor incentivo para socios repartidores activos."
                     } else {
-                        "🟢 BAJA DEMANDA ACTIVADA ($8 MXN/km): Comisión estándar de plataforma a 15%, 85% ganancias para socios."
+                        "🟢 OPERACIÓN REGULAR (Multiplicador 1.0x): Tarifa dinámica base calculada por distancia, tiempo y peso."
                     },
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
@@ -281,12 +297,12 @@ private fun AdminOverviewTab(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Ajuste por Clima (Director)",
+                                text = "Ajuste Operativo por Clima Adverso",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Lluvia / Tormenta: +15% tarifa base",
+                                text = "Lluvia o tormenta: Recargo directo de +$12 MXN al servicio",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -304,9 +320,9 @@ private fun AdminOverviewTab(
 
                 Text(
                     text = if (isWeatherSurgeActive) {
-                        "⚡ ESTADO ACTIVO: Se está aplicando un 15% de tarifa adicional en todas las cotizaciones solicitadas por clientes."
+                        "⚡ RECARGO POR CLIMA ACTIVO: Se añade recargo de seguridad por lluvia en todas las cotizaciones."
                     } else {
-                        "☀️ ESTADO NORMAL: Operación con tarifa regular ($8 MXN/km baja demanda | $9 MXN/km alta demanda)."
+                        "☀️ CONDICIONES DE CLIMA FAVORABLES: Sin recargos adicionales por clima."
                     },
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -554,7 +570,8 @@ private fun DriverApprovalsTab(
 @Composable
 private fun OrdersManagementTab(
     allOrders: List<OrderEntity>,
-    onConfirmPayment: (Long) -> Unit
+    onConfirmPayment: (Long) -> Unit,
+    onShowQr: (OrderEntity) -> Unit
 ) {
     Column {
         Text(
@@ -662,6 +679,25 @@ private fun OrdersManagementTab(
                                     }
                                 }
                             }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedButton(
+                            onClick = { onShowQr(order) },
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("director_show_qr_${order.id}")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.QrCode,
+                                contentDescription = null,
+                                tint = YaVaYellowPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Ver Código QR y PIN del Pedido", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
