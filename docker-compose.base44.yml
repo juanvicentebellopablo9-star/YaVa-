@@ -1,0 +1,62 @@
+services:
+  yava-preview:
+    build:
+      context: .
+      dockerfile: Dockerfile.base44
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - gradle-cache:/root/.gradle
+    environment:
+      - BASE44_PREVIEW_MODE=1
+      - ANDROID_HOME=/opt/android-sdk
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        echo "sdk.dir=/opt/android-sdk" > local.properties
+
+        if [ ! -f debug.keystore ]; then
+          keytool -genkeypair -v -keystore debug.keystore \
+            -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US"
+        fi
+
+        if [ ! -f gradlew ]; then
+          gradle wrapper --gradle-version ${GRADLE_VERSION:-8.14}
+          chmod +x gradlew
+        fi
+
+        echo "building" > /tmp/build-status.txt
+        python3 preview/server.py &
+        SERVER_PID=$!
+
+        set +e
+        ./gradlew :app:testDebugUnitTest \
+          --tests "*.ScreenshotTest" \
+          --tests "*.ScreenShotsTest" \
+          2>&1 | tee /tmp/build-log.txt
+        BUILD_EXIT=$?
+        set -e
+
+        if [ $$BUILD_EXIT -eq 0 ]; then
+          echo "success" > /tmp/build-status.txt
+        else
+          echo "failed" > /tmp/build-status.txt
+        fi
+
+        wait $SERVER_PID
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 300s
+    restart: on-failure
+
+volumes:
+  gradle-cache:
