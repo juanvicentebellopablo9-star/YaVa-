@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1024794932827",
+    "project_id": "yava--mexico",
+    "storage_bucket": "yava--mexico.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1024794932827:android:fb034add69be770e52f17e",
+        "android_client_info": {
+          "package_name": "com.aistudio.yava.logistics"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1024794932827-qsem274c09a2tn9cmrl2okjb79880il9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aistudio.yava.logistics",
+            "certificate_hash": "886e295594fe40b127f8fe86fb2db1dabb663331"
+          }
+        },
+        {
+          "client_id": "1024794932827-2psu0q91ijf9ie35h3och3kfic51qbqk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAZejooU9Gps1b9wAq16QmRbY3mqeA5kk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1024794932827-2psu0q91ijf9ie35h3och3kfic51qbqk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

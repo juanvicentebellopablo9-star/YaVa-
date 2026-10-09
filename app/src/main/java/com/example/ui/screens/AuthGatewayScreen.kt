@@ -148,7 +148,7 @@ fun AuthGatewayScreen(
                 val credentialManager = CredentialManager.create(context)
                 val googleIdOption = GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId("yava-logistics-google-client-id.apps.googleusercontent.com")
+                    .setServerClientId("1024794932827-2psu0q91ijf9ie35h3och3kfic51qbqk.apps.googleusercontent.com")
                     .build()
 
                 val request = GetCredentialRequest.Builder()
