@@ -33,13 +33,13 @@ object PricingCalculator {
     // Centralized Platform Commission Configuration (15% as mandated by YaVa! business model)
     const val PLATFORM_COMMISSION_RATE: Double = 0.15
 
-    // Base fare component (pickup & dispatch foundation)
+    // Base fare component (pickup & dispatch foundation) — local tier default
     const val BASE_PICKUP_FARE_MXN: Double = 22.0
 
-    // Distance component: standard rate per kilometer
+    // Distance component: standard rate per kilometer — local tier default
     const val RATE_PER_KM_MXN: Double = 6.50
 
-    // Time component: rate per estimated transit minute (traffic / urban delay compensation)
+    // Time component: rate per estimated transit minute — local tier default
     const val RATE_PER_MINUTE_MXN: Double = 1.20
 
     // Absolute minimum operational fare for any delivery
@@ -48,6 +48,7 @@ object PricingCalculator {
     /**
      * Calculates the dynamic price quote considering distance, traffic time, package weight,
      * weather conditions, and real-time demand surge multiplier.
+     * Automatically selects LOCAL, INTERCITY, or NATIONAL pricing tier based on distance.
      */
     fun calculateQuote(
         distanceKm: Double,
@@ -56,21 +57,27 @@ object PricingCalculator {
         weightKg: Double = 1.5,
         isHighDemand: Boolean = false,
         isWeatherSurge: Boolean = false,
-        customSurgeMultiplier: Double = 1.0
+        customSurgeMultiplier: Double = 1.0,
+        serviceTierOverride: String? = null
     ): QuoteResult {
         val normalizedDistance = (Math.round(distanceKm * 10.0) / 10.0).coerceAtLeast(0.5)
 
-        // Estimated transit time in minutes: ~2.8 min per km in urban traffic + 6 min base pickup/handoff
-        val calcMinutes = estimatedMinutes ?: ((normalizedDistance * 2.8) + 6.0).toInt().coerceAtLeast(8)
+        // Determine service tier (LOCAL, INTERCITY, NATIONAL) from distance
+        val tier = serviceTierOverride?.let { tid ->
+            NationalCoverage.SERVICE_TIERS.find { it.id == tid }
+        } ?: NationalCoverage.determineServiceTier(normalizedDistance)
 
-        // Component 1: Base Fare
-        val baseFare = BASE_PICKUP_FARE_MXN
+        // Estimated transit time: speed varies by tier (urban ~21km/h, highway ~70km/h, long-haul ~85km/h)
+        val calcMinutes = estimatedMinutes ?: ((normalizedDistance / tier.estimatedSpeedKmh) * 60.0 + 6.0).toInt().coerceAtLeast(8)
 
-        // Component 2: Distance Component
-        val distanceFare = Math.round((normalizedDistance * RATE_PER_KM_MXN) * 100.0) / 100.0
+        // Component 1: Base Fare (varies by tier)
+        val baseFare = tier.baseFareMxn
 
-        // Component 3: Time Component
-        val timeFare = Math.round((calcMinutes * RATE_PER_MINUTE_MXN) * 100.0) / 100.0
+        // Component 2: Distance Component (rate per km varies by tier)
+        val distanceFare = Math.round((normalizedDistance * tier.ratePerKmMxn) * 100.0) / 100.0
+
+        // Component 3: Time Component (rate per min varies by tier)
+        val timeFare = Math.round((calcMinutes * tier.ratePerMinuteMxn) * 100.0) / 100.0
 
         // Component 4: Surcharges (Weight & Weather)
         var surcharges = 0.0
@@ -102,9 +109,9 @@ object PricingCalculator {
         val driverEarnings = Math.round((finalPriceMxn - platformCommissionAmount) * 100.0) / 100.0
 
         val tierLabel = if (multiplier > 1.0) {
-            "Tarifa Dinámica (${String.format(java.util.Locale.US, "%.2fx", multiplier)})"
+            "${tier.label} (${String.format(java.util.Locale.US, "%.2fx", multiplier)})"
         } else {
-            "Tarifa Estándar Dinámica"
+            tier.label
         }
 
         val breakdown = "Base \$${baseFare} + Distancia (${normalizedDistance} km) \$${distanceFare} + Tiempo (${calcMinutes} min) \$${timeFare}" +

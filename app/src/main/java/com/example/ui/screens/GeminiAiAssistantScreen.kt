@@ -104,7 +104,7 @@ enum class GeminiFeatureMode(
         "Google Maps Grounding",
         "gemini-3.5-flash",
         Icons.Default.Map,
-        "Validación de ubicaciones y negocios en Mérida (Google Maps Tool)"
+        "Validación de ubicaciones y negocios a nivel nacional (Google Maps Tool)"
     ),
     SEARCH_GROUNDING(
         "Google Search Grounding",
@@ -160,7 +160,7 @@ fun GeminiAiAssistantScreen(
             ChatBubble(
                 id = "1",
                 sender = "gemini",
-                text = "¡Hola $userName! Soy tu asistente de inteligencia artificial YaVa! Logistics en Mérida, Yucatán. Puedo asistirte con cotizaciones dinámicas transparentes (15% comisión de plataforma), búsqueda con mapas, optimización de rutas y transcripción de voz.",
+                text = "¡Hola $userName! Soy tu asistente de inteligencia artificial YaVa! Logistics con cobertura nacional 🇲🇽. Puedo asistirte con cotizaciones dinámicas transparentes (15% comisión de plataforma), búsqueda con mapas, optimización de rutas y transcripción de voz.",
                 modelTag = "gemini-2.5-flash",
                 timestamp = "Ahora"
             )
@@ -183,7 +183,7 @@ fun GeminiAiAssistantScreen(
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-MX")
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Habla tu dirección o consulta para YaVa! Mérida...")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Habla tu dirección o consulta para YaVa! Nacional...")
         }
         try {
             speechLauncher.launch(intent)
@@ -218,12 +218,13 @@ fun GeminiAiAssistantScreen(
             }
 
             val systemInstruction = """
-                Eres el asistente oficial de YaVa! Logistics, la empresa de envíos y paquetería local en Mérida, Yucatán, México.
+                Eres el asistente oficial de YaVa! Logistics, la plataforma de envíos y paquetería a nivel nacional en México.
                 - Sistema de Tarifa Dinámica Modular YaVa!: Base ($22 MXN) + Distancia ($6.50/km) + Tiempo Tráfico ($1.20/min) + Recargos de peso/clima. Tarifa mínima: $35 MXN.
+                - Niveles de servicio: LOCAL (urbano, <25 km), INTERCITY (entre ciudades, 25-200 km), NATIONAL (larga distancia, >200 km) con tarifas diferenciadas.
                 - Comisión de plataforma: 15% para YaVa!, 85% ganancia neta para el socio repartidor.
-                - Base de operaciones: Mérida, Yucatán (Altabrisa, Centro, Montejo, Francisco de Montejo, Ciudad Caucel, Las Américas, Kanasín, etc.).
+                - Cobertura nacional: 32 estados de la República Mexicana, desde Tijuana hasta Cancún, desde Ciudad de México hasta Monterrey.
                 - Modalidad de pagos: Efectivo, Terminal con tarjeta, Transferencia SPEI (CLABE MercadoPago 722969010374423450 a nombre del Director Vicente Bello).
-                - Sé servicial, rápido, cortés y muy exacto con direcciones yucatecas.
+                - Sé servicial, rápido, cortés y muy exacto con direcciones de cualquier estado de México.
             """.trimIndent()
 
             val isMaps = selectedMode == GeminiFeatureMode.MAPS_GROUNDING
@@ -303,7 +304,7 @@ fun GeminiAiAssistantScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Mérida Grounding • Voz • Modelos 2026",
+                                text = "Cobertura Nacional • Voz • Modelos 2026",
                                 fontSize = 10.sp,
                                 color = YaVaYellowPrimary,
                                 fontWeight = FontWeight.Bold
@@ -472,7 +473,7 @@ fun GeminiAiAssistantScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Gemini está analizando tu solicitud en Mérida...",
+                            text = "Gemini está analizando tu solicitud nacional...",
                             fontSize = 11.sp,
                             color = Color.Gray
                         )

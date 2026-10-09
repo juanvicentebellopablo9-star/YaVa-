@@ -159,7 +159,7 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                                 fullName = displayName,
                                 phone = user?.phoneNumber ?: "9990000000",
                                 vehicle = "Motocicleta YaVa! 150cc",
-                                zone = "Mérida Centro y Periférico",
+                                zone = "Cobertura Nacional",
                                 email = userEmail,
                                 licensePlate = "YAV-2026"
                             )
@@ -198,7 +198,7 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                         fullName = email.substringBefore("@").replaceFirstChar { it.uppercase() },
                         phone = "9990000000",
                         vehicle = "Motocicleta YaVa! 150cc",
-                        zone = "Mérida Centro y Periférico",
+                        zone = "Cobertura Nacional",
                         email = email.trim(),
                         licensePlate = "YAV-2026"
                     )
@@ -245,7 +245,7 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                                         fullName = name,
                                         phone = user.phoneNumber ?: "9990000000",
                                         vehicle = "Motocicleta YaVa! 150cc",
-                                        zone = "Mérida y Periférico",
+                                        zone = "Cobertura Nacional",
                                         email = email,
                                         licensePlate = "YAV-2026"
                                     )
@@ -283,7 +283,7 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                         fullName = dummyName,
                         phone = "9991234567",
                         vehicle = "Motocicleta YaVa! 150cc",
-                        zone = "Mérida Centro",
+                        zone = "Cobertura Nacional",
                         email = dummyEmail,
                         licensePlate = "YAV-2026"
                     )
@@ -299,7 +299,7 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
      * Quick Demo Senders and Drivers Access (for instant previewing & testing)
      */
     fun loginAsQuickSender() {
-        saveUserAuthSession("remitente.demo@yava.app", "Remitente Premium Mérida", UserRole.CLIENTE)
+        saveUserAuthSession("remitente.demo@yava.app", "Remitente Premium Nacional", UserRole.CLIENTE)
         _actionMessage.value = "Sesión activa como Remitente / Cliente"
     }
 
@@ -309,7 +309,7 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                 fullName = "Carlos Pech (Socio Conductor)",
                 phone = "9991234567",
                 vehicle = "Italika FT150 / 2024",
-                zone = "Mérida y Periférico",
+                zone = "Cobertura Nacional",
                 email = "conductor.demo@yava.app",
                 licensePlate = "YAV-9921"
             )
@@ -371,7 +371,7 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                                 fullName = name.trim(),
                                 phone = phone.trim(),
                                 vehicle = vehicle,
-                                zone = "Toda la Ciudad",
+                                zone = "Cobertura Nacional",
                                 email = email.trim(),
                                 licensePlate = licensePlate
                             )
@@ -399,7 +399,7 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                         fullName = name.trim(),
                         phone = phone.trim(),
                         vehicle = vehicle,
-                        zone = "Toda la Ciudad",
+                        zone = "Cobertura Nacional",
                         email = email.trim(),
                         licensePlate = licensePlate
                     )
@@ -694,10 +694,12 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
         clientEmail: String = "",
         termsAccepted: Boolean = true,
         privacyAccepted: Boolean = true,
-        originLat: Double = 20.9674,
-        originLng: Double = -89.6237,
-        destLat: Double = 21.0188,
-        destLng: Double = -89.5840
+        originState: String = "",
+        destState: String = "",
+        originLat: Double = 0.0,
+        originLng: Double = 0.0,
+        destLat: Double = 0.0,
+        destLng: Double = 0.0
     ) {
         if (clientName.isBlank() || clientPhone.isBlank() || originAddress.isBlank() || destinationAddress.isBlank()) {
             _actionMessage.value = "Por favor completa los datos del remitente y las direcciones."
@@ -717,6 +719,8 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                     notes = notes.trim(),
                     payer = payer,
                     paymentMethod = paymentMethod,
+                    originState = originState,
+                    destState = destState,
                     originLat = originLat,
                     originLng = originLng,
                     destLat = destLat,
@@ -865,8 +869,8 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                     progressPercent = 50,
                     statusDescription = "Socio ${driver.fullName} asignado y en ruta hacia el origen",
                     driverName = driver.fullName,
-                    driverLat = 20.9680,
-                    driverLng = -89.6240,
+                    driverLat = updated.driverLat,
+                    driverLng = updated.driverLng,
                     estimatedArrivalMinutes = updated.estimatedTimeMinutes
                 )
             }
@@ -988,7 +992,7 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
 
         val (nextStatus, nextProgress, desc) = when (order.status) {
             "Creado", "Esperando conductor" -> Triple("Aceptado", 50, "Socio Carlos Mendoza asignado en ruta de recolección")
-            "Aceptado" -> Triple("En camino", 75, "Paquete recolectado, socio en ruta al destino en Mérida")
+            "Aceptado" -> Triple("En camino", 75, "Paquete recolectado, socio en ruta al destino")
             "En camino" -> Triple("Entregado", 100, "¡Paquete entregado y verificado en tiempo real con evidencia!")
             else -> Triple("En camino", 75, "Ruta en curso recalculada vía Firestore")
         }

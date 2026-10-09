@@ -63,10 +63,12 @@ class YaVaRepository(
         notes: String,
         payer: String = "Paga quien envía",
         paymentMethod: String = "EFECTIVO",
-        originLat: Double = 20.9674,
-        originLng: Double = -89.6237,
-        destLat: Double = 21.0188,
-        destLng: Double = -89.5840,
+        originState: String = "",
+        destState: String = "",
+        originLat: Double = 0.0,
+        originLng: Double = 0.0,
+        destLat: Double = 0.0,
+        destLng: Double = 0.0,
         isHighDemand: Boolean = false,
         isWeatherSurge: Boolean = false
     ): OrderEntity {
@@ -78,6 +80,7 @@ class YaVaRepository(
             isWeatherSurge = isWeatherSurge
         )
         val trackingCode = "YAVA-${Random.nextInt(10000, 99999)}"
+        val tier = NationalCoverage.determineServiceTier(quote.distanceKm)
 
         val newOrder = OrderEntity(
             trackingCode = trackingCode,
@@ -85,6 +88,8 @@ class YaVaRepository(
             clientPhone = clientPhone,
             originAddress = originAddress,
             destinationAddress = destinationAddress,
+            originState = originState,
+            destState = destState,
             originLat = originLat,
             originLng = originLng,
             destLat = destLat,
@@ -101,6 +106,7 @@ class YaVaRepository(
             platformCommissionMxn = quote.platformCommissionAmountMxn,
             driverEarningsMxn = quote.driverEarningsMxn,
             isCustomQuote = quote.distanceKm > 25.0,
+            serviceTier = tier.id,
             notes = notes,
             payer = payer,
             paymentMethod = paymentMethod,

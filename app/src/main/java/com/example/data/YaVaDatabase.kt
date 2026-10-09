@@ -13,7 +13,7 @@ import androidx.room.RoomDatabase
         CompanyConfigEntity::class,
         LegalConsentEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class YaVaDatabase : RoomDatabase() {

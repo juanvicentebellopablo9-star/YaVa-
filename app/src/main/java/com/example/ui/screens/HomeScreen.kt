@@ -247,7 +247,7 @@ fun HomeScreen(
                                         color = Color.White
                                     )
                                     Text(
-                                        text = "Hola, $userName • Mérida, Yucatán",
+                                        text = "Hola, $userName • Cobertura Nacional 🇲🇽",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = Color.LightGray
@@ -485,7 +485,7 @@ fun HomeScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "YaVa! Logistics Mérida • Desarrollado por Ing. Vicente Bello",
+                    text = "YaVa! Logistics Nacional 🇲🇽 • Desarrollado por Ing. Vicente Bello",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
@@ -1060,7 +1060,7 @@ private fun EmptyDeliveriesState(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Solicita envíos locales en Mérida con cotización en tiempo real y 15% de comisión transparente.",
+                text = "Solicita envíos a nivel nacional con cotización en tiempo real y 15% de comisión transparente.",
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -1125,7 +1125,7 @@ private fun LiveMapShortcutCard(
                         color = Color.White
                     )
                     Text(
-                        text = if (activeOrdersCount > 0) "$activeOrdersCount entrega(s) en seguimiento en Mérida" else "Mapa interactivo de Mérida y Flota YaVa!",
+                        text = if (activeOrdersCount > 0) "$activeOrdersCount entrega(s) en seguimiento nacional" else "Mapa interactivo nacional y Flota YaVa!",
                         fontSize = 11.sp,
                         color = YaVaYellowPrimary
                     )

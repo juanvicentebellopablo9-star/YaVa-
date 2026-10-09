@@ -174,7 +174,7 @@ fun DriverPortalScreen(
     var licensePlate by remember { mutableStateOf("") }
     var cargoCapacityStr by remember { mutableStateOf("25.0") }
 
-    val zones = listOf("Centro", "Norte", "Sur", "Oriente", "Poniente")
+    val zones = com.example.data.NationalCoverage.STATE_NAMES
     var selectedZone by remember { mutableStateOf(zones[0]) }
     var expandedZone by remember { mutableStateOf(false) }
 

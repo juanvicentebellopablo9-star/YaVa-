@@ -139,21 +139,21 @@ object AraSystemLucid {
         val approvedDrivers = drivers.filter { it.isApproved }
         val pendingDrivers = drivers.filter { !it.isApproved }
 
+        // National coverage: distribution by Mexican state
         val zoneDistribution = mutableMapOf<String, Int>()
-        listOf("Centro", "Norte", "Sur", "Oriente", "Poniente").forEach { zone ->
-            zoneDistribution[zone] = approvedDrivers.count { it.zone == zone }
+        com.example.data.NationalCoverage.STATE_NAMES.forEach { stateName ->
+            val count = approvedDrivers.count { it.zone.equals(stateName, ignoreCase = true) || it.coverageZone.equals(stateName, ignoreCase = true) }
+            if (count > 0) zoneDistribution[stateName] = count
         }
 
         val highDemandZones = orders
             .filter { it.status == "Esperando conductor" || it.status == "En camino" }
-            .groupBy {
-                // Approximate zone from address or default
-                when {
-                    it.originAddress.contains("Centro", ignoreCase = true) || it.originAddress.contains("Reforma", ignoreCase = true) -> "Centro"
-                    it.originAddress.contains("Norte", ignoreCase = true) || it.originAddress.contains("Satélite", ignoreCase = true) -> "Norte"
-                    it.originAddress.contains("Sur", ignoreCase = true) || it.originAddress.contains("Coyoacán", ignoreCase = true) -> "Sur"
-                    else -> "Centro"
-                }
+            .groupBy { order ->
+                // Use origin state if available, otherwise infer from address
+                if (order.originState.isNotBlank()) order.originState
+                else com.example.data.NationalCoverage.STATE_NAMES.find { state ->
+                    order.originAddress.contains(state, ignoreCase = true)
+                } ?: "Sin estado especificado"
             }
             .mapValues { it.value.size }
             .entries

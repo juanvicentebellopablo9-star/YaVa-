@@ -97,10 +97,17 @@ fun CustomerRequestScreen(
     var originAddress by remember { mutableStateOf("") }
     var destinationAddress by remember { mutableStateOf("") }
 
-    var originLat by remember { mutableDoubleStateOf(20.9674) }
-    var originLng by remember { mutableDoubleStateOf(-89.6237) }
-    var destLat by remember { mutableDoubleStateOf(21.0188) }
-    var destLng by remember { mutableDoubleStateOf(-89.5840) }
+    var originLat by remember { mutableDoubleStateOf(0.0) }
+    var originLng by remember { mutableDoubleStateOf(0.0) }
+    var destLat by remember { mutableDoubleStateOf(0.0) }
+    var destLng by remember { mutableDoubleStateOf(0.0) }
+
+    // National state selectors
+    val stateNames = remember { com.example.data.NationalCoverage.STATE_NAMES }
+    var selectedOriginState by remember { mutableStateOf("") }
+    var selectedDestState by remember { mutableStateOf("") }
+    var expandedOriginState by remember { mutableStateOf(false) }
+    var expandedDestState by remember { mutableStateOf(false) }
 
     var originSuggestions by remember { mutableStateOf<List<AddressSuggestion>>(emptyList()) }
     var destSuggestions by remember { mutableStateOf<List<AddressSuggestion>>(emptyList()) }
@@ -255,7 +262,7 @@ fun CustomerRequestScreen(
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = "Cotización y asignación inmediata en Mérida con Socio YaVa!",
+                        text = "Cotización y asignación inmediata a nivel nacional con Socio YaVa!",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
@@ -322,6 +329,101 @@ fun CustomerRequestScreen(
                         .fillMaxWidth()
                         .testTag("input_client_phone")
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // National State Selectors
+                Text(
+                    text = "Estados de Origen y Destino (Cobertura Nacional)",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Origin State Dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = expandedOriginState,
+                        onExpandedChange = { expandedOriginState = !expandedOriginState },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        OutlinedTextField(
+                            value = selectedOriginState,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Estado Origen") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedOriginState) },
+                            leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color(0xFF34C759)) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                                .testTag("dropdown_origin_state")
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedOriginState,
+                            onDismissRequest = { expandedOriginState = false }
+                        ) {
+                            stateNames.forEach { state ->
+                                DropdownMenuItem(
+                                    text = { Text(state) },
+                                    onClick = {
+                                        selectedOriginState = state
+                                        expandedOriginState = false
+                                        val coords = com.example.data.NationalCoverage.getCityCoordinates(state, "")
+                                        if (coords != null) {
+                                            originLat = coords.lat
+                                            originLng = coords.lng
+                                        }
+                                        triggerRealDistanceCalculation()
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Destination State Dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = expandedDestState,
+                        onExpandedChange = { expandedDestState = !expandedDestState },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        OutlinedTextField(
+                            value = selectedDestState,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Estado Destino") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDestState) },
+                            leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color(0xFFFF3B30)) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                                .testTag("dropdown_dest_state")
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedDestState,
+                            onDismissRequest = { expandedDestState = false }
+                        ) {
+                            stateNames.forEach { state ->
+                                DropdownMenuItem(
+                                    text = { Text(state) },
+                                    onClick = {
+                                        selectedDestState = state
+                                        expandedDestState = false
+                                        val coords = com.example.data.NationalCoverage.getCityCoordinates(state, "")
+                                        if (coords != null) {
+                                            destLat = coords.lat
+                                            destLng = coords.lng
+                                        }
+                                        triggerRealDistanceCalculation()
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -543,7 +645,7 @@ fun CustomerRequestScreen(
                     } else {
                         Icon(imageVector = Icons.Default.Route, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Calcular y Trazar Ruta en Calles de Mérida", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("Calcular y Trazar Ruta Real (Nacional)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -1018,6 +1120,8 @@ fun CustomerRequestScreen(
                     notes = notes,
                     payer = selectedPayer,
                     paymentMethod = selectedPaymentMethod,
+                    originState = selectedOriginState,
+                    destState = selectedDestState,
                     originLat = originLat,
                     originLng = originLng,
                     destLat = destLat,

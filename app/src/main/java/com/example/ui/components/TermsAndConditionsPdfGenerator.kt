@@ -112,14 +112,14 @@ object TermsAndConditionsPdfHelper {
             }
 
             canvas.drawText("TÉRMINOS Y CONDICIONES DE SERVICIO Y PRIVACIDAD", 25f, 38f, bannerTextPaint)
-            canvas.drawText("Plataforma Digital Logística YaVa! Express — Mérida, Yucatán, México", 25f, 60f, bannerSubTextPaint)
+            canvas.drawText("Plataforma Digital Logística YaVa! Express — Cobertura Nacional, México", 25f, 60f, bannerSubTextPaint)
 
             var y = 110f
             canvas.drawText("CONTRATO DE ADHESIÓN Y REGLAMENTO OPERATIVO DIGITAL", 25f, y, titlePaint)
             y += 18f
 
             val dateStr = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale("es", "MX")).format(Date())
-            canvas.drawText("Vigencia y Actualización: $dateStr | Jurisdicción: Mérida, Yucatán, México", 25f, y, subTitlePaint)
+            canvas.drawText("Vigencia y Actualización: $dateStr | Jurisdicción: República Mexicana", 25f, y, subTitlePaint)
             y += 20f
 
             canvas.drawLine(25f, y, 570f, y, Paint().apply { color = AndroidColor.LTGRAY; strokeWidth = 1.2f })
@@ -131,7 +131,7 @@ object TermsAndConditionsPdfHelper {
             y += 13f
             canvas.drawText("cumpliendo con la Ley Federal de Protección al Consumidor (PROFECO), el Código de Comercio de México,", 25f, y, textPaint)
             y += 13f
-            canvas.drawText("y la Ley de Movilidad y Vialidad del Estado de Yucatán para servicios de intermediación de mensajería.", 25f, y, textPaint)
+            canvas.drawText("y las leyes de movilidad y vialidad aplicables en toda la República Mexicana para servicios de intermediación de mensajería.", 25f, y, textPaint)
 
             y += 22f
             canvas.drawText("2. CREADOR, TITULAR Y DIRECCIÓN GENERAL", 25f, y, headerPaint)
@@ -154,7 +154,7 @@ object TermsAndConditionsPdfHelper {
             y += 22f
             canvas.drawText("4. REGLAMENTO PARA SOCIOS CONDUCTORES Y REPARTIDORES", 25f, y, headerPaint)
             y += 15f
-            canvas.drawText("• Contar con licencia de conducir vigente emitida en el Estado de Yucatán y vehículo en regla.", 25f, y, textPaint)
+            canvas.drawText("• Contar con licencia de conducir vigente emitida en cualquier estado de la República y vehículo en regla.", 25f, y, textPaint)
             y += 13f
             canvas.drawText("• Registrar evidencia digital obligatoria (fotografía / firma / código QR) al concretar la entrega.", 25f, y, textPaint)
             y += 13f
@@ -165,7 +165,7 @@ object TermsAndConditionsPdfHelper {
             y += 15f
             canvas.drawText("• Sus datos personales están protegidos conforme a la LFPDPPP en México.", 25f, y, textPaint)
             y += 13f
-            canvas.drawText("• Cualquier controversia legal se someterá expresamente a los Tribunales de la ciudad de Mérida, Yucatán.", 25f, y, textPaint)
+            canvas.drawText("• Cualquier controversia legal se someterá expresamente a los Tribunales competentes de la República Mexicana.", 25f, y, textPaint)
 
             y += 28f
             canvas.drawLine(25f, y, 570f, y, Paint().apply { color = AndroidColor.LTGRAY; strokeWidth = 1.2f })

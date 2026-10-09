@@ -112,7 +112,7 @@ fun MandatoryTermsGateScreen(
                 )
 
                 Text(
-                    text = "Plataforma Digital de Logística • Mérida, Yucatán",
+                    text = "Plataforma Digital de Logística Nacional 🇲🇽",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = YaVaYellowPrimary
@@ -143,7 +143,7 @@ fun MandatoryTermsGateScreen(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "Para continuar y hacer uso de los servicios de envío, transporte y logística de YaVa! Express en Mérida, Yucatán, es obligatorio aceptar el Reglamento de Operaciones y la Política de Privacidad conforme a las leyes de México.",
+                    text = "Para continuar y hacer uso de los servicios de envío, transporte y logística de YaVa! Express a nivel nacional, es obligatorio aceptar el Reglamento de Operaciones y la Política de Privacidad conforme a las leyes de México.",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 17.sp,
@@ -185,7 +185,7 @@ fun MandatoryTermsGateScreen(
                             Text(text = "Aspectos Clave de la Normativa:", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text(text = "• Ley PROFECO & Código de Comercio de México.\n• Ley de Movilidad y Vialidad del Estado de Yucatán.\n• Protección de Datos ARCO (yavaenvios@gmail.com).\n• Prohibición estricta de envío de objetos ilícitos.", fontSize = 10.sp, lineHeight = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(text = "• Ley PROFECO & Código de Comercio de México.\n• Leyes de Movilidad y Vialidad aplicables en toda la República Mexicana.\n• Protección de Datos ARCO (yavaenvios@gmail.com).\n• Prohibición estricta de envío de objetos ilícitos.", fontSize = 10.sp, lineHeight = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
