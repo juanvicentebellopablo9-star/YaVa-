@@ -16,6 +16,24 @@
       "generatedForDevelopment": true
     },
     {
+      "name": "FIREBASE_PROJECT_ID",
+      "description": "Firebase project ID. Get it from console.firebase.google.com > Project Settings > General.",
+      "requiredAtBoot": false,
+      "generatedForDevelopment": false
+    },
+    {
+      "name": "FIREBASE_API_KEY",
+      "description": "Firebase Web API key. Get it from console.firebase.google.com > Project Settings > General > Web API Key.",
+      "requiredAtBoot": false,
+      "generatedForDevelopment": false
+    },
+    {
+      "name": "FIREBASE_APP_ID",
+      "description": "Firebase Android App ID. Get it from console.firebase.google.com > Project Settings > General > Your apps > App ID.",
+      "requiredAtBoot": false,
+      "generatedForDevelopment": false
+    },
+    {
       "name": "SLACK_WEBHOOK_URL",
       "description": "Slack Incoming Webhook URL for operations team alerts on order status changes. Get it from Slack > Apps > Incoming Webhooks (your-workspace.slack.com/services/new/incoming-webhook). Create a webhook for the #operaciones channel.",
       "requiredAtBoot": false,

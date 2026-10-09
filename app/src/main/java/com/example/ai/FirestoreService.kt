@@ -94,13 +94,19 @@ object FirestoreService {
     fun initialize(context: Context) {
         try {
             if (FirebaseApp.getApps(context).isEmpty()) {
+                // Read from BuildConfig (populated by Secrets Gradle Plugin from .env / .env.example).
+                // Falls back to sandbox values if not configured.
+                val projectId = com.example.BuildConfig.FIREBASE_PROJECT_ID
+                val apiKey = com.example.BuildConfig.FIREBASE_API_KEY
+                val appId = com.example.BuildConfig.FIREBASE_APP_ID
+
                 val options = FirebaseOptions.Builder()
-                    .setApplicationId("com.aistudio.yava.logistics")
-                    .setProjectId("yava-logistics")
-                    .setApiKey("AIzaSyLocalSandboxDevKey987654321")
+                    .setApplicationId(appId)
+                    .setProjectId(projectId)
+                    .setApiKey(apiKey)
                     .build()
                 FirebaseApp.initializeApp(context, options)
-                Log.d(TAG, "FirebaseApp programmatically initialized for Firestore")
+                Log.d(TAG, "FirebaseApp initialized for project: $projectId")
             }
         } catch (e: Exception) {
             Log.w(TAG, "Firebase programmatic initialization note: ${e.message}")
