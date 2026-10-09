@@ -11,6 +11,8 @@ docker compose -f docker-compose.base44.yml run --rm --no-deps builder sh -c '
   export GRADLE_USER_HOME=/home/gradle/.gradle
   export ANDROID_HOME=/opt/android-sdk
   echo "sdk.dir=/opt/android-sdk" > /app/local.properties
+  # Write .env from environment variables so the Secrets Gradle Plugin picks up real keys
+  if [ -f /run/base44/app.env ]; then cp /run/base44/app.env /app/.env; fi
   cd /app && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
 '
 ```
@@ -22,6 +24,7 @@ docker compose -f docker-compose.base44.yml run --rm --no-deps builder sh -c '
   export GRADLE_USER_HOME=/home/gradle/.gradle
   export ANDROID_HOME=/opt/android-sdk
   echo "sdk.dir=/opt/android-sdk" > /app/local.properties
+  if [ -f /run/base44/app.env ]; then cp /run/base44/app.env /app/.env; fi
   cd /app && chmod +x gradlew && ./gradlew testDebugUnitTest --no-daemon
 '
 ```
@@ -34,7 +37,7 @@ docker compose -f docker-compose.base44.yml run --rm --no-deps builder sh -c '
 - The Gradle wrapper (`gradlew`, `gradle/wrapper/`) is not committed; it is generated inside the Docker container.
 - `debug.keystore` is generated at build time (gitignored).
 - `local.properties` with `sdk.dir` is generated at build time (gitignored).
-- The Secrets Gradle Plugin reads `.env` and `.env.example` for `GEMINI_API_KEY` and `MAPS_API_KEY`.
+- The Secrets Gradle Plugin reads `.env` and `.env.example` for `GEMINI_API_KEY`, `MAPS_API_KEY`, and `SLACK_WEBHOOK_URL`. At build time, `/run/base44/app.env` is copied to `.env` so real secrets are packaged into BuildConfig.
 - `google-services.json` is optional (plugin uses `MissingGoogleServicesStrategy.WARN`).
 - Firebase Firestore is initialized programmatically in `FirestoreService.kt` with a fallback sandbox config.
 - The app uses a dual-map engine: Leaflet OSM (WebView, zero API key) and a Canvas-based vector HUD fallback.
@@ -43,7 +46,7 @@ docker compose -f docker-compose.base44.yml run --rm --no-deps builder sh -c '
 ## Architecture
 
 - `data/` — Room entities, DAOs, database, repository, pricing calculator, national coverage catalog (32 states).
-- `ai/` — Gemini AI client (REST API), Firestore service, ARA System Lucid analytics engine.
+- `ai/` — Gemini AI client (REST API), Firestore service, Slack notification service, ARA System Lucid analytics engine.
 - `ui/screens/` — Compose screens: Home, CustomerRequest, DriverPortal, TrackingMap, AdminPortal, AuthGateway, GeminiAiAssistant, MandatoryTermsGate.
 - `ui/components/` — Reusable Compose components: maps, GPS helper, QR, PDF generators, legal modules, voice assistant, contact cards.
 - `ui/viewmodel/` — Single `YaVaViewModel` managing all state and business logic.

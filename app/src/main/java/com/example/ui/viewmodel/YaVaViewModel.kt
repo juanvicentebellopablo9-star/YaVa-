@@ -783,6 +783,18 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                     "Tu código de rastreo es ${created.trackingCode}. $paymentInfoMsg"
                 )
 
+                // Alert operations team via Slack
+                com.example.ai.SlackNotificationService.notifyOrderStatusChange(
+                    trackingCode = created.trackingCode,
+                    status = created.status,
+                    clientName = created.clientName,
+                    originState = created.originState,
+                    destState = created.destState,
+                    priceMxn = created.priceMxn,
+                    serviceTier = created.serviceTier,
+                    extraInfo = paymentInfoMsg
+                )
+
                 if (termsAccepted && privacyAccepted) {
                     recordLegalConsent(
                         userName = clientName.trim(),
@@ -806,6 +818,19 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                 "¡Pago SPEI Verificado! 🏦",
                 "El pago del pedido #${orderId} fue aprobado por el Director."
             )
+            val paidOrder = repository.getOrderById(orderId)
+            if (paidOrder != null) {
+                com.example.ai.SlackNotificationService.notifyOrderStatusChange(
+                    trackingCode = paidOrder.trackingCode,
+                    status = "Pago Verificado (Director)",
+                    clientName = paidOrder.clientName,
+                    originState = paidOrder.originState,
+                    destState = paidOrder.destState,
+                    priceMxn = paidOrder.priceMxn,
+                    serviceTier = paidOrder.serviceTier,
+                    extraInfo = "Pago SPEI aprobado por Director"
+                )
+            }
         }
     }
 
@@ -818,6 +843,19 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                 "¡Pago Confirmado por Repartidor! 🛵",
                 "El cobro del servicio #${orderId} fue registrado correctamente."
             )
+            val paidOrder = repository.getOrderById(orderId)
+            if (paidOrder != null) {
+                com.example.ai.SlackNotificationService.notifyOrderStatusChange(
+                    trackingCode = paidOrder.trackingCode,
+                    status = "Pago Confirmado (Conductor)",
+                    clientName = paidOrder.clientName,
+                    originState = paidOrder.originState,
+                    destState = paidOrder.destState,
+                    priceMxn = paidOrder.priceMxn,
+                    serviceTier = paidOrder.serviceTier,
+                    extraInfo = "Cobro confirmado por Socio Repartidor"
+                )
+            }
         }
     }
 
@@ -894,6 +932,16 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                 "Conductor Asignado 🛵",
                 "${driver.fullName} ha aceptado tu pedido #${orderId} y va en camino a recolección."
             )
+            com.example.ai.SlackNotificationService.notifyOrderStatusChange(
+                trackingCode = updated?.trackingCode ?: "",
+                status = "Aceptado",
+                clientName = updated?.clientName ?: "",
+                originState = updated?.originState ?: "",
+                destState = updated?.destState ?: "",
+                priceMxn = updated?.priceMxn ?: 0.0,
+                serviceTier = updated?.serviceTier ?: "LOCAL",
+                extraInfo = "Conductor: ${driver.fullName}"
+            )
         }
     }
 
@@ -934,6 +982,15 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                 "Actualización de Envío #${orderId}",
                 "El estado de tu paquete cambió a: $nextStatus."
             )
+            com.example.ai.SlackNotificationService.notifyOrderStatusChange(
+                trackingCode = updated?.trackingCode ?: "",
+                status = nextStatus,
+                clientName = updated?.clientName ?: "",
+                originState = updated?.originState ?: "",
+                destState = updated?.destState ?: "",
+                priceMxn = updated?.priceMxn ?: 0.0,
+                serviceTier = updated?.serviceTier ?: "LOCAL"
+            )
         }
     }
 
@@ -954,6 +1011,16 @@ class YaVaViewModel(application: Application) : AndroidViewModel(application) {
                 getApplication(),
                 "¡Pedido Entregado Con Éxito! 🎉",
                 "El envío #${orderId} ha sido entregado. Puedes descargar tu recibo PDF en la app."
+            )
+            com.example.ai.SlackNotificationService.notifyOrderStatusChange(
+                trackingCode = updated?.trackingCode ?: "",
+                status = "Entregado",
+                clientName = updated?.clientName ?: "",
+                originState = updated?.originState ?: "",
+                destState = updated?.destState ?: "",
+                priceMxn = updated?.priceMxn ?: 0.0,
+                serviceTier = updated?.serviceTier ?: "LOCAL",
+                extraInfo = "Evidencia de entrega confirmada con QR"
             )
         }
     }

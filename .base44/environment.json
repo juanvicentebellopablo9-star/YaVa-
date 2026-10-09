@@ -14,6 +14,12 @@
       "description": "Google Maps API key for Maps SDK and Maps Compose. Get it from Google Cloud Console (console.cloud.google.com) under APIs & Services > Credentials. Required for Google Maps integration.",
       "requiredAtBoot": false,
       "generatedForDevelopment": true
+    },
+    {
+      "name": "SLACK_WEBHOOK_URL",
+      "description": "Slack Incoming Webhook URL for operations team alerts on order status changes. Get it from Slack > Apps > Incoming Webhooks (your-workspace.slack.com/services/new/incoming-webhook). Create a webhook for the #operaciones channel.",
+      "requiredAtBoot": false,
+      "generatedForDevelopment": true
     }
   ]
 }

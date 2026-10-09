@@ -10,6 +10,8 @@ services:
       - BASE44_PREVIEW_MODE=${BASE44_PREVIEW_MODE:-}
       - GRADLE_USER_HOME=/home/gradle/.gradle
       - ANDROID_HOME=/opt/android-sdk
+    env_file:
+      - /run/base44/app.env
     working_dir: /app
     command: ["sh", "-c", "echo 'Android build environment ready' && sleep infinity"]
     restart: on-failure
