@@ -113,7 +113,7 @@ fun YaVaGoogleMapsTracker(
         if (selectedOrder?.destLat != null && selectedOrder.destLat != 0.0) {
             LatLng(selectedOrder.destLat, selectedOrder.destLng)
         } else {
-            LatLng(21.0188, -89.5840)
+            LatLng(19.4326, -99.1332)
         }
     }
 

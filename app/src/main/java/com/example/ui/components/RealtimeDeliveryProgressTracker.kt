@@ -387,7 +387,7 @@ fun RealtimeDeliveryProgressTracker(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Telemetría GPS: ${String.format("%.4f", liveDriverLat ?: 20.9674)}, ${String.format("%.4f", liveDriverLng ?: -89.6237)}",
+                                    text = "Telemetría GPS: ${String.format("%.4f", liveDriverLat ?: 19.4326)}, ${String.format("%.4f", liveDriverLng ?: -99.1332)}",
                                     fontSize = 10.sp,
                                     fontFamily = FontFamily.Monospace,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant

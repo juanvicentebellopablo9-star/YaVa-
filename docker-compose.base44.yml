@@ -1,0 +1,18 @@
+services:
+  builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.base44
+    volumes:
+      - .:/app
+      - gradle-cache:/home/gradle/.gradle
+    environment:
+      - BASE44_PREVIEW_MODE=${BASE44_PREVIEW_MODE:-}
+      - GRADLE_USER_HOME=/home/gradle/.gradle
+      - ANDROID_HOME=/opt/android-sdk
+    working_dir: /app
+    command: ["sh", "-c", "echo 'Android build environment ready'"]
+    restart: "no"
+
+volumes:
+  gradle-cache:

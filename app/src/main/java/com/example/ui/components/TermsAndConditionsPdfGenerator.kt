@@ -64,126 +64,263 @@ object TermsAndConditionsPdfHelper {
     fun generateTermsPdf(context: Context): File? {
         try {
             val pdfDocument = PdfDocument()
-            val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create() // A4 size
-            val page = pdfDocument.startPage(pageInfo)
-            val canvas: Canvas = page.canvas
+            val pageWidth = 595
+            val pageHeight = 842
+            val leftMargin = 25f
+            val rightMargin = 570f
+            val topMargin = 25f
+            val bottomMargin = 800f
+            var pageNumber = 1
 
+            // Paints
             val titlePaint = Paint().apply {
-                color = AndroidColor.BLACK
-                textSize = 15f
-                isFakeBoldText = true
+                color = AndroidColor.BLACK; textSize = 15f; isFakeBoldText = true
             }
             val subTitlePaint = Paint().apply {
-                color = AndroidColor.DKGRAY
-                textSize = 11f
-                isFakeBoldText = true
+                color = AndroidColor.DKGRAY; textSize = 11f; isFakeBoldText = true
             }
             val headerPaint = Paint().apply {
-                color = AndroidColor.parseColor("#1565C0") // Deep Blue
-                textSize = 11f
-                isFakeBoldText = true
+                color = AndroidColor.parseColor("#1565C0"); textSize = 11f; isFakeBoldText = true
             }
             val textPaint = Paint().apply {
-                color = AndroidColor.BLACK
-                textSize = 9.5f
+                color = AndroidColor.BLACK; textSize = 9.5f
             }
             val boldTextPaint = Paint().apply {
-                color = AndroidColor.BLACK
-                textSize = 9.5f
-                isFakeBoldText = true
+                color = AndroidColor.BLACK; textSize = 9.5f; isFakeBoldText = true
             }
             val bannerPaint = Paint().apply {
-                color = AndroidColor.parseColor("#E5A93B") // YaVa Yellow
-                style = Paint.Style.FILL
+                color = AndroidColor.parseColor("#E5A93B"); style = Paint.Style.FILL
             }
-
-            // Header Banner
-            canvas.drawRect(0f, 0f, 595f, 85f, bannerPaint)
-
             val bannerTextPaint = Paint().apply {
-                color = AndroidColor.BLACK
-                textSize = 16f
-                isFakeBoldText = true
+                color = AndroidColor.BLACK; textSize = 16f; isFakeBoldText = true
             }
             val bannerSubTextPaint = Paint().apply {
-                color = AndroidColor.parseColor("#222222")
-                textSize = 10f
-                isFakeBoldText = true
+                color = AndroidColor.parseColor("#222222"); textSize = 10f; isFakeBoldText = true
+            }
+            val sealPaint = Paint().apply {
+                color = AndroidColor.parseColor("#2E7D32"); textSize = 11f; isFakeBoldText = true
+            }
+            val footerPaint = Paint().apply {
+                color = AndroidColor.GRAY; textSize = 8f
+            }
+            val dividerPaint = Paint().apply {
+                color = AndroidColor.LTGRAY; strokeWidth = 1.2f
             }
 
+            // --- Pagination helper ---
+            var canvas: Canvas
+            var page = pdfDocument.startPage(PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create())
+            canvas = page.canvas
+
+            fun newPage() {
+                // Footer on current page before turning
+                canvas.drawText(
+                    "YaVa! Express — Términos y Condiciones Nacionales | Página $pageNumber",
+                    leftMargin, pageHeight - 20f, footerPaint
+                )
+                pdfDocument.finishPage(page)
+                pageNumber++
+                page = pdfDocument.startPage(PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create())
+                canvas = page.canvas
+            }
+
+            fun ensureSpace(needed: Float, y: Float): Float {
+                if (y + needed > bottomMargin) {
+                    newPage()
+                    return topMargin
+                }
+                return y
+            }
+
+            fun drawHeader(title: String, y: Float): Float {
+                var yy = ensureSpace(20f, y)
+                canvas.drawText(title, leftMargin, yy, headerPaint)
+                yy += 15f
+                return yy
+            }
+
+            fun drawWrappedText(text: String, y: Float, paint: Paint = textPaint, maxWidth: Float = 545f): Float {
+                val words = text.split(" ")
+                val sb = StringBuilder()
+                var yy = y
+                for (word in words) {
+                    val testLine = if (sb.isEmpty()) word else "$sb $word"
+                    if (paint.measureText(testLine) > maxWidth) {
+                        yy = ensureSpace(13f, yy)
+                        canvas.drawText(sb.toString(), leftMargin, yy, paint)
+                        yy += 13f
+                        sb.clear()
+                        sb.append(word)
+                    } else {
+                        sb.clear()
+                        sb.append(testLine)
+                    }
+                }
+                if (sb.isNotEmpty()) {
+                    yy = ensureSpace(13f, yy)
+                    canvas.drawText(sb.toString(), leftMargin, yy, paint)
+                    yy += 13f
+                }
+                return yy
+            }
+
+            fun drawBullet(label: String, text: String, y: Float): Float {
+                val yy = ensureSpace(13f, y)
+                canvas.drawText("• $label", leftMargin, yy, textPaint)
+                val labelWidth = textPaint.measureText("• $label  ")
+                // Wrap the continuation text after the label
+                val words = text.split(" ")
+                val sb = StringBuilder()
+                var lineY = yy
+                var firstLine = true
+                for (word in words) {
+                    val testLine = if (sb.isEmpty()) word else "$sb $word"
+                    val prefixWidth = if (firstLine) labelWidth else 0f
+                    if (paint_measureWithPrefix(textPaint, testLine, prefixWidth) > 545f) {
+                        canvas.drawText(sb.toString(), leftMargin + prefixWidth, lineY, textPaint)
+                        lineY += 13f
+                        lineY = ensureSpace(13f, lineY)
+                        sb.clear()
+                        sb.append(word)
+                        firstLine = false
+                    } else {
+                        sb.clear()
+                        sb.append(testLine)
+                    }
+                }
+                if (sb.isNotEmpty()) {
+                    val prefixWidth = if (firstLine) labelWidth else 0f
+                    canvas.drawText(sb.toString(), leftMargin + prefixWidth, lineY, textPaint)
+                    lineY += 13f
+                }
+                return lineY
+            }
+
+            // --- Page 1: Header Banner ---
+            canvas.drawRect(0f, 0f, pageWidth.toFloat(), 85f, bannerPaint)
             canvas.drawText("TÉRMINOS Y CONDICIONES DE SERVICIO Y PRIVACIDAD", 25f, 38f, bannerTextPaint)
             canvas.drawText("Plataforma Digital Logística YaVa! Express — Cobertura Nacional, México", 25f, 60f, bannerSubTextPaint)
 
             var y = 110f
-            canvas.drawText("CONTRATO DE ADHESIÓN Y REGLAMENTO OPERATIVO DIGITAL", 25f, y, titlePaint)
+            canvas.drawText("CONTRATO DE ADHESIÓN Y REGLAMENTO OPERATIVO DIGITAL", leftMargin, y, titlePaint)
             y += 18f
 
             val dateStr = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale("es", "MX")).format(Date())
-            canvas.drawText("Vigencia y Actualización: $dateStr | Jurisdicción: República Mexicana", 25f, y, subTitlePaint)
+            canvas.drawText("Vigencia y Actualización: $dateStr | Jurisdicción: República Mexicana", leftMargin, y, subTitlePaint)
+            y += 20f
+            canvas.drawLine(leftMargin, y, rightMargin, y, dividerPaint)
             y += 20f
 
-            canvas.drawLine(25f, y, 570f, y, Paint().apply { color = AndroidColor.LTGRAY; strokeWidth = 1.2f })
+            // --- Section 1 ---
+            y = drawHeader("1. DISPOSICIONES GENERALES Y MARCO LEGAL EN MÉXICO", y)
+            y = drawWrappedText(
+                "El presente documento constituye el Contrato de Adhesión para el uso de la plataforma digital YaVa! Express, " +
+                "cumpliendo con la Ley Federal de Protección al Consumidor (PROFECO), el Código de Comercio de México, " +
+                "y las leyes de movilidad y vialidad aplicables en toda la República Mexicana para servicios de intermediación de mensajería.",
+                y
+            )
+            y += 9f
 
-            y += 20f
-            canvas.drawText("1. DISPOSICIONES GENERALES Y MARCO LEGAL EN MÉXICO", 25f, y, headerPaint)
-            y += 15f
-            canvas.drawText("El presente documento constituye el Contrato de Adhesión para el uso de la plataforma digital YaVa! Express,", 25f, y, textPaint)
-            y += 13f
-            canvas.drawText("cumpliendo con la Ley Federal de Protección al Consumidor (PROFECO), el Código de Comercio de México,", 25f, y, textPaint)
-            y += 13f
-            canvas.drawText("y las leyes de movilidad y vialidad aplicables en toda la República Mexicana para servicios de intermediación de mensajería.", 25f, y, textPaint)
-
-            y += 22f
-            canvas.drawText("2. CREADOR, TITULAR Y DIRECCIÓN GENERAL", 25f, y, headerPaint)
-            y += 15f
-            canvas.drawText("• Titular y Creador Exclusivo: ", 25f, y, textPaint)
+            // --- Section 2 ---
+            y = drawHeader("2. CREADOR, TITULAR Y DIRECCIÓN GENERAL", y)
+            y = ensureSpace(26f, y)
+            canvas.drawText("• Titular y Creador Exclusivo: ", leftMargin, y, textPaint)
             canvas.drawText("Juan Vicente Bello Pablo", 170f, y, boldTextPaint)
             y += 13f
-            canvas.drawText("• Cargos y Responsabilidad: ", 25f, y, textPaint)
+            y = ensureSpace(13f, y)
+            canvas.drawText("• Cargos y Responsabilidad: ", leftMargin, y, textPaint)
             canvas.drawText("Director, Planificador, Desarrollador, Ingeniero y Arquitecto de Software.", 170f, y, textPaint)
-
             y += 22f
-            canvas.drawText("3. DERECHOS Y OBLIGACIONES DEL USUARIO (CLIENTE)", 25f, y, headerPaint)
-            y += 15f
-            canvas.drawText("• Solicitar envíos con datos verídicos de origen, destino y contenido.", 25f, y, textPaint)
-            y += 13f
-            canvas.drawText("• Prohibición absoluta de enviar objetos ilícitos, explosivos, sustancias prohibidas o armas.", 25f, y, textPaint)
-            y += 13f
-            canvas.drawText("• Aceptar las tarifas calculadas por el algoritmo oficial conforme a distancia y volumen.", 25f, y, textPaint)
 
-            y += 22f
-            canvas.drawText("4. REGLAMENTO PARA SOCIOS CONDUCTORES Y REPARTIDORES", 25f, y, headerPaint)
-            y += 15f
-            canvas.drawText("• Contar con licencia de conducir vigente emitida en cualquier estado de la República y vehículo en regla.", 25f, y, textPaint)
-            y += 13f
-            canvas.drawText("• Registrar evidencia digital obligatoria (fotografía / firma / código QR) al concretar la entrega.", 25f, y, textPaint)
-            y += 13f
-            canvas.drawText("• Cumplir con los lineamientos fiscales del SAT para retención de impuestos en plataformas digitales.", 25f, y, textPaint)
+            // --- Section 3 ---
+            y = drawHeader("3. DERECHOS Y OBLIGACIONES DEL USUARIO (CLIENTE)", y)
+            y = drawWrappedText("• Solicitar envíos con datos verídicos de origen, destino y contenido en cualquier estado de la República.", y)
+            y = drawWrappedText("• Prohibición absoluta de enviar objetos ilícitos, explosivos, sustancias prohibidas o armas.", y)
+            y = drawWrappedText("• Aceptar las tarifas calculadas por el algoritmo oficial conforme a distancia, volumen y nivel de servicio.", y)
+            y += 9f
 
-            y += 22f
-            canvas.drawText("5. PROTECCIÓN DE DATOS PERSONALES (DERECHOS ARCO) Y JURISDICCIÓN", 25f, y, headerPaint)
-            y += 15f
-            canvas.drawText("• Sus datos personales están protegidos conforme a la LFPDPPP en México.", 25f, y, textPaint)
-            y += 13f
-            canvas.drawText("• Cualquier controversia legal se someterá expresamente a los Tribunales competentes de la República Mexicana.", 25f, y, textPaint)
+            // --- Section 4 ---
+            y = drawHeader("4. REGLAMENTO PARA SOCIOS CONDUCTORES Y REPARTIDORES", y)
+            y = drawWrappedText("• Contar con licencia de conducir vigente emitida en cualquier estado de la República y vehículo en regla.", y)
+            y = drawWrappedText("• Registrar evidencia digital obligatoria (fotografía / firma / código QR) al concretar la entrega.", y)
+            y = drawWrappedText("• Cumplir con los lineamientos fiscales del SAT para retención de impuestos en plataformas digitales.", y)
+            y += 9f
 
-            y += 28f
-            canvas.drawLine(25f, y, 570f, y, Paint().apply { color = AndroidColor.LTGRAY; strokeWidth = 1.2f })
+            // --- Section 5 ---
+            y = drawHeader("5. REGLAS DEL SERVICIO Y TIEMPOS DE ESPERA", y)
+            y = drawWrappedText("El tiempo de tolerancia máximo para recolección y entrega es de 10 minutos. Transcurrido este tiempo, el conductor podrá reprogramar o solicitar tarifa de tiempo de espera.", y)
+            y += 9f
 
-            y += 30f
-            val sealPaint = Paint().apply {
-                color = AndroidColor.parseColor("#2E7D32")
-                textSize = 11f
-                isFakeBoldText = true
-            }
-            canvas.drawText("ACEPTACIÓN DIGITAL: DOCUMENTO VÁLIDO EN MÉXICO Y YUCATÁN", 25f, y, sealPaint)
+            // --- Section 6 ---
+            y = drawHeader("6. CANCELACIONES Y PENALIZACIONES", y)
+            y = drawWrappedText("Las cancelaciones sin costo aplican únicamente antes de que el conductor inicie la ruta hacia el punto de recolección. Posterior a la asignación en camino, se aplicará un cargo mínimo de tarifa base.", y)
+            y += 9f
 
-            y += 35f
-            val footerPaint = Paint().apply {
-                color = AndroidColor.GRAY
-                textSize = 8f
-            }
-            canvas.drawText("Documento legal de Términos de Servicio generado por YaVa! Express. Titularidad: Juan Vicente Bello Pablo.", 25f, y, footerPaint)
+            // --- Section 7 ---
+            y = drawHeader("7. LIMITACIONES DE RESPONSABILIDAD", y)
+            y = drawWrappedText("YaVa! actúa como plataforma tecnológica intermediaria. El valor máximo reembolsable por siniestro estándar está acotado según la cobertura solicitada o cotización contratada.", y)
+            y += 9f
+
+            // --- Section 8 ---
+            y = drawHeader("8. OBJETOS RESTRINGIDOS Y PROHIBIDOS", y)
+            y = drawWrappedText("Está estrictamente prohibido transportar: estupefacientes, sustancias tóxicas o inflamables, armas de fuego, explosivos, animales vivos, dinero en efectivo en montos no declarados o bienes ilícitos bajo leyes mexicanas.", y)
+            y += 9f
+
+            // --- Section 9 ---
+            y = drawHeader("9. SUSPENSIÓN DE CUENTAS", y)
+            y = drawWrappedText("Cualquier intento de fraude, violencia hacia conductores/clientes o violación de los presentes términos resultará en la suspensión inmediata e irrevocable de la cuenta.", y)
+            y += 9f
+
+            // --- Section 10 ---
+            y = drawHeader("10. PROTECCIÓN DE DATOS PERSONALES (DERECHOS ARCO) Y JURISDICCIÓN", y)
+            y = drawWrappedText("• Sus datos personales están protegidos conforme a la LFPDPPP en México.", y)
+            y = drawWrappedText("• Derechos ARCO: acceso, rectificación, cancelación y oposición mediante solicitud a yavaenvios@gmail.com.", y)
+            y = drawWrappedText("• Cualquier controversia legal se someterá expresamente a los Tribunales competentes de la República Mexicana.", y)
+            y += 9f
+
+            // --- Section 11 ---
+            y = drawHeader("11. COBERTURA NACIONAL Y NIVELES DE SERVICIO", y)
+            y = drawWrappedText(
+                "YaVa! Express opera con cobertura en los 32 estados de la República Mexicana, ofreciendo tres niveles de servicio: " +
+                "Envío Local Urbano (dentro de la misma ciudad), Envío Intercity (entre ciudades del mismo estado o estados cercanos) " +
+                "y Envío Nacional de larga distancia (entre cualquier estado de la República). Las tarifas se calculan dinámicamente " +
+                "según distancia, tiempo estimado de trayecto y nivel de servicio seleccionado.",
+                y
+            )
+            y += 9f
+
+            // --- Section 12 ---
+            y = drawHeader("12. TITULARIDAD, PROPIEDAD INTELECTUAL Y CRÉDITOS DE DESARROLLO", y)
+            y = drawWrappedText(
+                "El diseño, código fuente, algoritmos de cálculo, flujo de usuarios, arquitectura de software y dirección general " +
+                "de esta plataforma son creación original de Juan Vicente Bello Pablo, quien ostenta los cargos de Director, " +
+                "Planificador, Desarrollador, Ingeniero y Arquitecto de Software de YaVa! Express.",
+                y
+            )
+            y += 9f
+
+            // --- Section 13 ---
+            y = drawHeader("13. ACEPTACIÓN DIGITAL", y)
+            y = drawWrappedText(
+                "Al marcar la casilla correspondiente o solicitar un servicio en la plataforma, el usuario consiente digitalmente " +
+                "acatando el presente contrato marco de adhesión, válido en toda la República Mexicana.",
+                y
+            )
+
+            // --- Seal & Footer ---
+            y += 18f
+            y = ensureSpace(60f, y)
+            canvas.drawLine(leftMargin, y, rightMargin, y, dividerPaint)
+            y += 20f
+            canvas.drawText("ACEPTACIÓN DIGITAL: DOCUMENTO VÁLIDO EN LA REPÚBLICA MEXICANA", leftMargin, y, sealPaint)
+            y += 20f
+            canvas.drawText("Versión v1.0-2026-MX | Generado: $dateStr", leftMargin, y, subTitlePaint)
+
+            // Final page footer
+            canvas.drawText(
+                "YaVa! Express — Términos y Condiciones Nacionales | Página $pageNumber",
+                leftMargin, pageHeight - 20f, footerPaint
+            )
 
             pdfDocument.finishPage(page)
 
@@ -198,6 +335,10 @@ object TermsAndConditionsPdfHelper {
             Toast.makeText(context, "Error generando PDF de Términos: ${e.message}", Toast.LENGTH_LONG).show()
             return null
         }
+    }
+
+    private fun paint_measureWithPrefix(paint: Paint, text: String, prefixWidth: Float): Float {
+        return prefixWidth + paint.measureText(text)
     }
 
     fun shareTermsPdf(context: Context, file: File) {
@@ -313,12 +454,20 @@ fun TermsAndConditionsPdfDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     LegalPoint("1. Marco Legal PROFECO", "Intermediación digital bajo leyes mexicanas y regulación comercial aplicable en toda la República Mexicana.")
-                    LegalPoint("2. Titular de Plataforma", "Juan Vicente Bello Pablo (Director, Planificador, Desarrollador y Arquitecto de Software).")
-                    LegalPoint("3. Seguridad y Prohibiciones", "Estrictamente prohibido el traslado de objetos ilegales, armas o sustancias prohibidas.")
-                    LegalPoint("4. Evidencia y Recepción", "Las entregas requieren validación con código QR, fotografía o firma digital.")
-                    LegalPoint("5. Privacidad y Datos", "Protección de datos conforme a la Ley Federal de Protección de Datos Personales (ARCO).")
+                    LegalPoint("2. Titular de Plataforma", "Juan Vicente Bello Pablo (Director, Planificador, Desarrollador, Ingeniero y Arquitecto de Software).")
+                    LegalPoint("3. Derechos del Cliente", "Datos verídicos de origen, destino y contenido; aceptación de tarifas calculadas por el algoritmo oficial.")
+                    LegalPoint("4. Reglamento de Conductores", "Licencia vigente de cualquier estado, evidencia digital obligatoria y cumplimiento fiscal SAT.")
+                    LegalPoint("5. Tiempos de Espera", "Tolerancia máxima de 10 minutos para recolección y entrega; posterior aplica tarifa de espera.")
+                    LegalPoint("6. Cancelaciones", "Sin costo antes de que el conductor inicie ruta; posterior se aplica cargo mínimo de tarifa base.")
+                    LegalPoint("7. Limitación de Responsabilidad", "YaVa! es intermediario tecnológico; reembolso acotado según cobertura o cotización contratada.")
+                    LegalPoint("8. Objetos Prohibidos", "Estupefacientes, tóxicos, inflamables, armas, explosivos, animales vivos, efectivo no declarado, bienes ilícitos.")
+                    LegalPoint("9. Suspensión de Cuentas", "Fraude, violencia o violación de términos resulta en suspensión inmediata e irrevocable.")
+                    LegalPoint("10. Privacidad y Datos ARCO", "Protección conforme a LFPDPPP; derechos ARCO mediante solicitud a yavaenvios@gmail.com.")
+                    LegalPoint("11. Cobertura Nacional", "32 estados, 3 niveles de servicio: Local Urbano, Intercity y Nacional de larga distancia.")
+                    LegalPoint("12. Propiedad Intelectual", "Código, algoritmos y arquitectura son creación original de Juan Vicente Bello Pablo.")
+                    LegalPoint("13. Aceptación Digital", "Al marcar la casilla o solicitar servicio, el usuario consiente este contrato válido en toda la República.")
                 }
 
                 Spacer(modifier = Modifier.height(18.dp))

@@ -1,0 +1,19 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "GEMINI_API_KEY",
+      "description": "Gemini AI API key for the AI assistant. Get it from Google AI Studio (aistudio.google.com). Required for Gemini AI chat functionality.",
+      "requiredAtBoot": false,
+      "generatedForDevelopment": true
+    },
+    {
+      "name": "MAPS_API_KEY",
+      "description": "Google Maps API key for Maps SDK and Maps Compose. Get it from Google Cloud Console (console.cloud.google.com) under APIs & Services > Credentials. Required for Google Maps integration.",
+      "requiredAtBoot": false,
+      "generatedForDevelopment": true
+    }
+  ]
+}

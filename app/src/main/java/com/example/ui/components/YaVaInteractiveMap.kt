@@ -234,10 +234,10 @@ fun YaVaInteractiveMap(
         val wv = webViewRef ?: return@LaunchedEffect
         val order = selectedOrder
 
-        val originLat = order?.originLat?.takeIf { it != 0.0 } ?: 20.9850
-        val originLng = order?.originLng?.takeIf { it != 0.0 } ?: -89.6180
-        val destLat = order?.destLat?.takeIf { it != 0.0 } ?: 21.0188
-        val destLng = order?.destLng?.takeIf { it != 0.0 } ?: -89.5840
+        val originLat = order?.originLat?.takeIf { it != 0.0 } ?: 19.4326
+        val originLng = order?.originLng?.takeIf { it != 0.0 } ?: -99.1332
+        val destLat = order?.destLat?.takeIf { it != 0.0 } ?: 19.4326
+        val destLng = order?.destLng?.takeIf { it != 0.0 } ?: -99.1332
 
         val driverLat = driverCurrentLocation?.latitude ?: ((originLat + destLat) / 2.0)
         val driverLng = driverCurrentLocation?.longitude ?: ((originLng + destLng) / 2.0)
@@ -250,8 +250,8 @@ fun YaVaInteractiveMap(
         // Build fleet JSON
         val fleetJson = JSONArray().apply {
             activeDrivers.forEachIndexed { index, d ->
-                val dLat = 20.9500 + ((index * 0.022) % 0.11)
-                val dLng = -89.6400 + ((index * 0.028) % 0.12)
+                val dLat = 19.3800 + ((index * 0.022) % 0.11)
+                val dLng = -99.1800 + ((index * 0.028) % 0.12)
                 put(
                     JSONObject().apply {
                         put("name", d.fullName)
@@ -398,8 +398,8 @@ fun YaVaInteractiveMap(
                     if (selectedOrder != null) {
                         val originLat = if (selectedOrder.originLat != 0.0) selectedOrder.originLat else 19.4326
                         val originLng = if (selectedOrder.originLng != 0.0) selectedOrder.originLng else -99.1332
-                        val destLat = if (selectedOrder.destLat != 0.0) selectedOrder.destLat else 21.0188
-                        val destLng = if (selectedOrder.destLng != 0.0) selectedOrder.destLng else -89.5840
+                        val destLat = if (selectedOrder.destLat != 0.0) selectedOrder.destLat else 19.4326
+                        val destLng = if (selectedOrder.destLng != 0.0) selectedOrder.destLng else -99.1332
 
                         val originOffset = latLngToOffset(originLat, originLng, width, height, zoomScale)
                         val destOffset = latLngToOffset(destLat, destLng, width, height, zoomScale)
@@ -443,8 +443,8 @@ fun YaVaInteractiveMap(
 
                     // Available Driver Fleet
                     activeDrivers.forEachIndexed { index, _ ->
-                        val dLat = 20.9500 + ((index * 0.025) % 0.12)
-                        val dLng = -89.6500 + ((index * 0.035) % 0.15)
+                        val dLat = 19.3800 + ((index * 0.025) % 0.12)
+                        val dLng = -99.1800 + ((index * 0.035) % 0.15)
                         val driverPos = latLngToOffset(dLat, dLng, width, height, zoomScale)
 
                         drawCircle(color = YaVaYellowPrimary.copy(alpha = 0.3f), radius = 16.dp.toPx(), center = driverPos)
@@ -909,8 +909,8 @@ fun YaVaInteractiveMap(
                             // Open in external navigation intent (without needing API keys)
                             IconButton(
                                 onClick = {
-                                    val destLat = if (selectedOrder.destLat != 0.0) selectedOrder.destLat else 21.0188
-                                    val destLng = if (selectedOrder.destLng != 0.0) selectedOrder.destLng else -89.5840
+                                    val destLat = if (selectedOrder.destLat != 0.0) selectedOrder.destLat else 19.4326
+                                    val destLng = if (selectedOrder.destLng != 0.0) selectedOrder.destLng else -99.1332
                                     val uri = Uri.parse("geo:0,0?q=$destLat,$destLng(${Uri.encode("Entrega YaVa! ${selectedOrder.trackingCode}")})")
                                     val intent = Intent(Intent.ACTION_VIEW, uri)
                                     try {
@@ -1169,7 +1169,7 @@ private fun buildLeafletHtml(): String {
                 var map = L.map('map', {
                     zoomControl: false,
                     attributionControl: true
-                }).setView([20.9674, -89.6237], 13);
+                }).setView([19.4326, -99.1332], 13);
 
                 // 100% Free Tile Providers (Zero API Key required)
                 var tileLayers = {
@@ -1251,7 +1251,7 @@ private fun buildLeafletHtml(): String {
                         var group = new L.featureGroup(markers);
                         map.fitBounds(group.getBounds().pad(0.25), { animate: true });
                     } else {
-                        map.flyTo([20.9674, -89.6237], 13);
+                        map.flyTo([19.4326, -99.1332], 13);
                     }
                 };
 
