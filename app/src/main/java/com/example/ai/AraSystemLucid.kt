@@ -191,7 +191,7 @@ object AraSystemLucid {
             recommendations.add(
                 RecommendationItem(
                     title = "Optimización de Asignación Cercana",
-                    description = "Existen $pending pedido(s) sin asignar. Se sugiere notificar a conductores activos en zona Centro/Norte.",
+                    description = "Existen $pending pedido(s) sin asignar. Se sugiere notificar a conductores activos en el estado de origen del envío.",
                     priority = PriorityLevel.HIGH,
                     category = "Operations"
                 )

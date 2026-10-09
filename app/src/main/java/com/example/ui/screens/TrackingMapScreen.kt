@@ -454,8 +454,8 @@ fun TrackingMapScreen(
                                         viewModel.updateDriverGpsLocation(order.id, realGps.latitude, realGps.longitude)
                                     },
                                     onError = { _ ->
-                                        // Update to active Mérida center location if GPS unavailable
-                                        viewModel.updateDriverGpsLocation(order.id, 20.9674, -89.6237)
+                                        // Fallback to CDMX center if GPS unavailable
+                                        viewModel.updateDriverGpsLocation(order.id, 19.4326, -99.1332)
                                     }
                                 )
                             },

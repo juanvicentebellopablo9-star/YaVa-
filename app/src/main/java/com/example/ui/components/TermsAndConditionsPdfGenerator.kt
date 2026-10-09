@@ -187,7 +187,7 @@ object TermsAndConditionsPdfHelper {
 
             pdfDocument.finishPage(page)
 
-            val file = File(context.cacheDir, "Terminos_y_Condiciones_YaVa_Express_Merida.pdf")
+            val file = File(context.cacheDir, "Terminos_y_Condiciones_YaVa_Express_Nacional.pdf")
             val outputStream = FileOutputStream(file)
             pdfDocument.writeTo(outputStream)
             pdfDocument.close()
@@ -210,8 +210,8 @@ object TermsAndConditionsPdfHelper {
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "application/pdf"
                 putExtra(Intent.EXTRA_STREAM, uri)
-                putExtra(Intent.EXTRA_SUBJECT, "Términos y Condiciones de Servicio - YaVa! Express Mérida")
-                putExtra(Intent.EXTRA_TEXT, "Adjunto documento oficial de Términos y Condiciones de Servicio y Privacidad para la Plataforma Digital YaVa! Express en Mérida, Yucatán.")
+                putExtra(Intent.EXTRA_SUBJECT, "Términos y Condiciones de Servicio - YaVa! Express Nacional")
+                putExtra(Intent.EXTRA_TEXT, "Adjunto documento oficial de Términos y Condiciones de Servicio y Privacidad para la Plataforma Digital YaVa! Express con cobertura nacional en la República Mexicana.")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
             context.startActivity(Intent.createChooser(intent, "Compartir Términos y Condiciones PDF"))
@@ -292,7 +292,7 @@ fun TermsAndConditionsPdfDialog(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Mérida, YUC",
+                                text = "República Mexicana",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = YaVaGreenSuccess
@@ -306,7 +306,7 @@ fun TermsAndConditionsPdfDialog(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
-                    text = "Reglamento Legal y Operativo (Mérida, Yucatán):",
+                    text = "Reglamento Legal y Operativo (República Mexicana):",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -314,7 +314,7 @@ fun TermsAndConditionsPdfDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LegalPoint("1. Marco Legal PROFECO", "Intermediación digital bajo leyes mexicanas y regulación comercial de Mérida, Yucatán.")
+                    LegalPoint("1. Marco Legal PROFECO", "Intermediación digital bajo leyes mexicanas y regulación comercial aplicable en toda la República Mexicana.")
                     LegalPoint("2. Titular de Plataforma", "Juan Vicente Bello Pablo (Director, Planificador, Desarrollador y Arquitecto de Software).")
                     LegalPoint("3. Seguridad y Prohibiciones", "Estrictamente prohibido el traslado de objetos ilegales, armas o sustancias prohibidas.")
                     LegalPoint("4. Evidencia y Recepción", "Las entregas requieren validación con código QR, fotografía o firma digital.")

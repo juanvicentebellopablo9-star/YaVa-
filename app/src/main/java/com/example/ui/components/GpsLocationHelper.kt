@@ -15,6 +15,7 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import com.example.data.NationalCoverage
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -56,33 +57,60 @@ object GpsLocationHelper {
         val cleanQuery = query.trim().lowercase(Locale.ROOT)
 
         val presetLocations = listOf(
+            // CDMX y Área Metropolitana
+            AddressSuggestion("Zócalo CDMX", "Plaza de la Constitución, Centro, Ciudad de México", 19.4326, -99.1332),
+            AddressSuggestion("Polanco CDMX", "Av. Presidente Masaryk, Polanco, Ciudad de México", 19.4254, -99.1857),
+            AddressSuggestion("Coyoacán CDMX", "Jardín Centenario, Coyoacán, Ciudad de México", 19.3466, -99.1617),
+            AddressSuggestion("Santa Fe CDMX", "Av. Vasco de Quiroga, Santa Fe, Ciudad de México", 19.3587, -99.2542),
+            AddressSuggestion("Aeropuerto AICM", "Av. Capitán Carlos León, CDMX", 19.4363, -99.0721),
+            // Monterrey, Nuevo León
+            AddressSuggestion("Macroplaza Monterrey", "Gran Plaza, Monterrey, Nuevo León", 25.6667, -100.3094),
+            AddressSuggestion("San Pedro Garza García", "Av. Lázaro Cárdenas, San Pedro, Nuevo León", 25.6581, -100.4039),
+            AddressSuggestion("Aeropuerto MTY", "Carretera Miguel Alemán, Apodaca, Nuevo León", 25.7781, -100.1061),
+            // Guadalajara, Jalisco
+            AddressSuggestion("Centro Guadalajara", "Av. Hidalgo, Centro, Guadalajara, Jalisco", 20.6597, -103.3496),
+            AddressSuggestion("Zapopan Centro", "Av. Hidalgo, Zapopan, Jalisco", 20.7167, -103.4000),
+            AddressSuggestion("Minerva Guadalajara", "Av. Vallarta, Guadalajara, Jalisco", 20.6739, -103.3744),
+            // Mérida, Yucatán
             AddressSuggestion("Centro Histórico, Mérida", "Calle 60 x 61, Centro, Mérida, Yucatán", 20.9674, -89.6237),
-            AddressSuggestion("Paseo de Montejo, Mérida", "Av. Paseo de Montejo, Centro, Mérida, Yucatán", 20.9850, -89.6180),
-            AddressSuggestion("Prolongación Paseo de Montejo", "Prol. Paseo de Montejo, Campestre, Mérida, Yucatán", 21.0050, -89.6220),
+            AddressSuggestion("Paseo de Montejo, Mérida", "Av. Paseo de Montejo, Mérida, Yucatán", 20.9850, -89.6180),
             AddressSuggestion("Plaza Altabrisa, Mérida", "Calle 7 No. 451, Altabrisa, Mérida, Yucatán", 21.0188, -89.5840),
-            AddressSuggestion("Gran Plaza, Mérida", "Calle 50 No. 460, Gonzalo Guerrero, Mérida, Yucatán", 21.0312, -89.6285),
-            AddressSuggestion("Plaza La Isla Mérida", "Cabo Norte, Temozón Norte, Mérida, Yucatán", 21.0450, -89.5780),
-            AddressSuggestion("Plaza Galerías Mérida", "Calle 60 No. 299, Revolución, Mérida, Yucatán", 21.0360, -89.6350),
-            AddressSuggestion("The Harbor Mérida", "Vía Montejo, Cordemex, Mérida, Yucatán", 21.0330, -89.6320),
-            AddressSuggestion("City Center Mérida", "Av. Andrés García Lavín, San Ramón Norte, Mérida, Yucatán", 21.0280, -89.5980),
-            AddressSuggestion("Plaza Uptown Mérida", "Calle 15 x 18, Vista Alegre, Mérida, Yucatán", 21.0150, -89.5920),
-            AddressSuggestion("Macroplaza Mérida", "Calle 33, Polígono 108, Mérida, Yucatán", 20.9920, -89.5750),
-            AddressSuggestion("Aeropuerto Int. de Mérida", "Carretera Mérida-Umán Km 14.5, Mérida, Yucatán", 20.9370, -89.6577),
-            AddressSuggestion("Parque Santa Lucía, Mérida", "Calle 60 x 55, Centro, Mérida, Yucatán", 20.9705, -89.6228),
-            AddressSuggestion("Hospital Star Médica Mérida", "Calle 26 No. 199, Altabrisa, Mérida, Yucatán", 21.0195, -89.5830),
-            AddressSuggestion("Hospital O'Horán, Mérida", "Av. Itzaes x Jacinto Canek, Centro, Mérida, Yucatán", 20.9680, -89.6380),
-            AddressSuggestion("Universidad UADY Centro", "Calle 60 x 57, Centro, Mérida, Yucatán", 20.9712, -89.6230),
-            AddressSuggestion("Francisco de Montejo, Mérida", "Calle 50 x 51, Francisco de Montejo, Mérida, Yucatán", 21.0250, -89.6450),
-            AddressSuggestion("Fraccionamiento Las Américas", "Av. Cronista Deportivo, Las Américas, Mérida, Yucatán", 21.0650, -89.6420),
-            AddressSuggestion("Ciudad Caucel, Mérida", "Av. Cronista, Ciudad Caucel, Mérida, Yucatán", 20.9980, -89.7020),
-            AddressSuggestion("Los Héroes, Mérida", "Av. Los Héroes, Fracc. Los Héroes, Mérida, Yucatán", 20.9810, -89.5480),
-            AddressSuggestion("Av. Andrés García Lavín", "Av. García Lavín, San Ramón Norte, Mérida, Yucatán", 21.0260, -89.5990),
-            AddressSuggestion("Anillo Periférico Norte Mérida", "Anillo Periférico Km 25, Temozón Norte, Mérida, Yucatán", 21.0480, -89.6050),
-            AddressSuggestion("Mercado Lucas de Gálvez", "Calle 65 x 56, Centro, Mérida, Yucatán", 20.9620, -89.6210),
-            AddressSuggestion("Terminal ADO Mérida CAME", "Calle 68 x 69 y 71, Centro, Mérida, Yucatán", 20.9580, -89.6280),
-            AddressSuggestion("Kanasín Centro, Yucatán", "Calle 21, Centro, Kanasín, Yucatán", 20.9333, -89.5583),
-            AddressSuggestion("Umán Centro, Yucatán", "Calle 20, Centro, Umán, Yucatán", 20.8833, -89.7500),
-            AddressSuggestion("Progreso Malecón, Yucatán", "Calle 19, Malecón, Progreso, Yucatán", 21.2833, -89.6644)
+            // Puebla
+            AddressSuggestion("Centro Histórico Puebla", "Av. 5 de Mayo, Centro, Puebla", 19.0414, -98.2063),
+            AddressSuggestion("Cholula, Puebla", "Av. Morelos, Cholula, Puebla", 19.0625, -98.3006),
+            // Cancún, Quintana Roo
+            AddressSuggestion("Hotel Zone Cancún", "Blvd. Kukulcán, Cancún, Quintana Roo", 21.1389, -86.7494),
+            AddressSuggestion("Playa del Carmen", "Av. 5ta, Playa del Carmen, Quintana Roo", 20.6296, -87.0739),
+            // Tijuana, Baja California
+            AddressSuggestion("Centro Tijuana", "Av. Revolución, Centro, Tijuana, Baja California", 32.5149, -117.0382),
+            AddressSuggestion("Aeropuerto Tijuana", "Carretera Aeropuerto, Tijuana, Baja California", 32.5410, -116.9700),
+            // León, Guanajuato
+            AddressSuggestion("Centro León", "Plaza de Armas, León, Guanajuato", 21.1250, -101.6860),
+            AddressSuggestion("Plaza Mayor León", "Blvd. Adolfo López Mateos, León, Guanajuato", 21.1167, -101.6833),
+            // Querétaro
+            AddressSuggestion("Centro Querétaro", "Plaza de Armas, Querétaro", 20.5888, -100.3889),
+            AddressSuggestion("Juriquilla Querétaro", "Av. Juriquilla, Querétaro", 20.7083, -100.4500),
+            // Toluca, Estado de México
+            AddressSuggestion("Centro Toluca", "Plaza de los Mártires, Toluca, Estado de México", 19.2826, -99.6557),
+            // Veracruz
+            AddressSuggestion("Malecón Veracruz", "Av. Manuel Ávila Camacho, Veracruz", 19.1738, -96.1342),
+            AddressSuggestion("Plaza Ámbar Veracruz", "Av. Rufo Figueroa, Veracruz", 19.1630, -96.1870),
+            // Hermosillo, Sonora
+            AddressSuggestion("Centro Hermosillo", "Plaza Zaragoza, Hermosillo, Sonora", 29.0729, -110.9559),
+            // Culiacán, Sinaloa
+            AddressSuggestion("Centro Culiacán", "Av. Alvaro Obregón, Culiacán, Sinaloa", 24.8091, -107.3940),
+            // Villahermosa, Tabasco
+            AddressSuggestion("Centro Villahermosa", "Av. Francisco I. Madero, Villahermosa, Tabasco", 17.9895, -92.9474),
+            // Oaxaca
+            AddressSuggestion("Centro Oaxaca", "Zócalo, Oaxaca de Juárez, Oaxaca", 17.0732, -96.7266),
+            // Chihuahua
+            AddressSuggestion("Centro Chihuahua", "Plaza de Armas, Chihuahua, Chihuahua", 28.6333, -106.0828),
+            // Acapulco, Guerrero
+            AddressSuggestion("Costera Acapulco", "Av. Costera Miguel Alemán, Acapulco, Guerrero", 16.8531, -99.8237),
+            // Saltillo, Coahuila
+            AddressSuggestion("Centro Saltillo", "Plaza de Armas, Saltillo, Coahuila", 25.4262, -100.9956),
+            // Morelia, Michoacán
+            AddressSuggestion("Centro Morelia", "Plaza de Armas, Morelia, Michoacán", 19.7060, -101.1940)
         )
 
         val localMatches = presetLocations.filter {
@@ -96,14 +124,17 @@ object GpsLocationHelper {
 
             try {
                 val geocoder = Geocoder(context, Locale("es", "MX"))
-                val meridaSearchQuery = if (query.contains("Mérida", ignoreCase = true) || query.contains("Yucatán", ignoreCase = true)) {
+                // National search: append "México" for broader coverage if no state/city is specified
+                val nationalSearchQuery = if (query.contains("México", ignoreCase = true) ||
+                    NationalCoverage.STATE_NAMES.any { query.contains(it, ignoreCase = true) } ||
+                    query.contains("CDMX", ignoreCase = true)) {
                     query
                 } else {
-                    "$query, Mérida, Yucatán"
+                    "$query, México"
                 }
 
                 @Suppress("DEPRECATION")
-                val results = geocoder.getFromLocationName(meridaSearchQuery, 5)
+                val results = geocoder.getFromLocationName(nationalSearchQuery, 5)
                 if (!results.isNullOrEmpty()) {
                     for (addr in results) {
                         val title = addr.featureName ?: addr.thoroughfare ?: addr.subLocality ?: query
@@ -112,7 +143,7 @@ object GpsLocationHelper {
                             if (!addr.subLocality.isNullOrEmpty()) append("${addr.subLocality}, ")
                             if (!addr.locality.isNullOrEmpty()) append("${addr.locality}, ")
                             if (!addr.adminArea.isNullOrEmpty()) append("${addr.adminArea}")
-                        }.ifEmpty { addr.getAddressLine(0) ?: "$query, Mérida, Yucatán" }
+                        }.ifEmpty { addr.getAddressLine(0) ?: "$query, México" }
 
                         val item = AddressSuggestion(
                             title = title,
@@ -129,15 +160,15 @@ object GpsLocationHelper {
                 // Ignore geocoder errors
             }
 
-            // If no suggestion matched, dynamically add custom Mérida address entry
+            // If no suggestion matched, dynamically add custom national address entry
             if (suggestions.isEmpty()) {
-                val formattedQuery = if (query.contains("Mérida", ignoreCase = true)) query else "$query, Mérida, Yucatán"
+                val formattedQuery = "$query, México"
                 suggestions.add(
                     AddressSuggestion(
                         title = query.take(30),
                         fullAddress = formattedQuery,
-                        latitude = 20.9674 + (Math.random() - 0.5) * 0.05,
-                        longitude = -89.6237 + (Math.random() - 0.5) * 0.05
+                        latitude = 19.4326 + (Math.random() - 0.5) * 0.05,
+                        longitude = -99.1332 + (Math.random() - 0.5) * 0.05
                     )
                 )
             }
@@ -188,8 +219,8 @@ object GpsLocationHelper {
                 } catch (e: Exception) { }
             }
 
-            if (oLat == 0.0) { oLat = 20.9674; oLng = -89.6237 }
-            if (dLat == 0.0) { dLat = 21.0188; dLng = -89.5840 }
+            if (oLat == 0.0) { oLat = 19.4326; oLng = -99.1332 }
+            if (dLat == 0.0) { dLat = 19.4326; dLng = -99.1332 }
 
             // Try Open Source Routing Machine (OSRM) driving network calculation
             var calculatedKm: Double? = null

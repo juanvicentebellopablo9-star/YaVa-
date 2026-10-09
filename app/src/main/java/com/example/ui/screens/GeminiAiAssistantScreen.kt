@@ -223,7 +223,7 @@ fun GeminiAiAssistantScreen(
                 - Niveles de servicio: LOCAL (urbano, <25 km), INTERCITY (entre ciudades, 25-200 km), NATIONAL (larga distancia, >200 km) con tarifas diferenciadas.
                 - Comisión de plataforma: 15% para YaVa!, 85% ganancia neta para el socio repartidor.
                 - Cobertura nacional: 32 estados de la República Mexicana, desde Tijuana hasta Cancún, desde Ciudad de México hasta Monterrey.
-                - Modalidad de pagos: Efectivo, Terminal con tarjeta, Transferencia SPEI (CLABE MercadoPago 722969010374423450 a nombre del Director Vicente Bello).
+                - Modalidad de pagos: Efectivo, Terminal con tarjeta, Transferencia SPEI (CLABE MercadoPago 722969010374423450 a nombre del Director Juan Vicente Bello Pablo).
                 - Sé servicial, rápido, cortés y muy exacto con direcciones de cualquier estado de México.
             """.trimIndent()
 

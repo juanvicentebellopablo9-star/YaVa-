@@ -120,18 +120,18 @@ import java.net.URL
 import java.net.URLEncoder
 import java.util.Locale
 
-// Geographic Coordinates for Mérida Metropolitan Area, Yucatán, Mexico
+// Geographic Coordinates — National Default Center: Ciudad de México
 data class YaVaLatLng(val latitude: Double, val longitude: Double)
 
-val MERIDA_CENTER = YaVaLatLng(20.9674, -89.6237)
-private const val MERIDA_MIN_LAT = 20.8800
-private const val MERIDA_MAX_LAT = 21.0800
-private const val MERIDA_MIN_LNG = -89.7200
-private const val MERIDA_MAX_LNG = -89.5200
+val NATIONAL_CENTER = YaVaLatLng(19.4326, -99.1332)
+private const val NATIONAL_MIN_LAT = 19.2800
+private const val NATIONAL_MAX_LAT = 19.6000
+private const val NATIONAL_MIN_LNG = -99.3500
+private const val NATIONAL_MAX_LNG = -98.9500
 
 enum class MapEngine {
     LEAFLET_OSM,
-    MERIDA_VECTOR
+    NATIONAL_VECTOR
 }
 
 enum class TileLayerType(val label: String, val icon: ImageVector) {
@@ -192,7 +192,7 @@ fun YaVaInteractiveMap(
     onPointSelected: ((Double, Double) -> Unit)? = null,
     showNavigationHud: Boolean = true,
     enableSearchOverlay: Boolean = true,
-    initialEngine: MapEngine = MapEngine.MERIDA_VECTOR
+    initialEngine: MapEngine = MapEngine.NATIONAL_VECTOR
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -309,12 +309,12 @@ fun YaVaInteractiveMap(
                         routeSteps = steps
                     },
                     onRendererCrashed = {
-                        currentEngine = MapEngine.MERIDA_VECTOR
+                        currentEngine = MapEngine.NATIONAL_VECTOR
                     },
                     tileLayer = currentTileLayer
                 )
             } else {
-                // High-performance Offline Vector Canvas Fallback of Mérida
+                // High-performance Offline Vector Canvas Fallback (National)
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
@@ -353,8 +353,8 @@ fun YaVaInteractiveMap(
                         y += gridSpacing
                     }
 
-                    // Anillo Periférico de Mérida
-                    val perifericoCenter = latLngToOffset(20.9700, -89.6200, width, height, zoomScale)
+                    // Anillo Periférico CDMX (Circuito Interior)
+                    val perifericoCenter = latLngToOffset(19.4100, -99.1700, width, height, zoomScale)
                     val perifericoRadiusX = (width * 0.35f) * zoomScale
                     val perifericoRadiusY = (height * 0.35f) * zoomScale
 
@@ -365,39 +365,39 @@ fun YaVaInteractiveMap(
                         style = Stroke(width = 8.dp.toPx() * zoomScale)
                     )
 
-                    // Paseo de Montejo
-                    val centroPos = latLngToOffset(20.9674, -89.6237, width, height, zoomScale)
-                    val montejoNorthPos = latLngToOffset(21.0360, -89.6350, width, height, zoomScale)
+                    // Av. Reforma (Paseo principal CDMX)
+                    val centroPos = latLngToOffset(19.4326, -99.1332, width, height, zoomScale)
+                    val reformaWestPos = latLngToOffset(19.4330, -99.1900, width, height, zoomScale)
                     drawLine(
                         color = Color(0xFF52525B),
                         start = centroPos,
-                        end = montejoNorthPos,
+                        end = reformaWestPos,
                         strokeWidth = 6.dp.toPx() * zoomScale
                     )
 
-                    // Carretera Mérida - Progreso
-                    val progresoPos = latLngToOffset(21.0800, -89.6450, width, height, zoomScale)
+                    // Av. Insurgentes (Eje principal norte-sur)
+                    val insurgentesNorthPos = latLngToOffset(19.4700, -99.1700, width, height, zoomScale)
                     drawLine(
                         color = Color(0xFF52525B),
-                        start = montejoNorthPos,
-                        end = progresoPos,
+                        start = reformaWestPos,
+                        end = insurgentesNorthPos,
                         strokeWidth = 7.dp.toPx() * zoomScale
                     )
 
-                    // Corredor Altabrisa & García Lavín
-                    val altabrisaPos = latLngToOffset(21.0188, -89.5840, width, height, zoomScale)
-                    val garciaLavinPos = latLngToOffset(21.0280, -89.5980, width, height, zoomScale)
+                    // Corredor Polanco & Santa Fe
+                    val polancaPos = latLngToOffset(19.4254, -99.1857, width, height, zoomScale)
+                    val santaFePos = latLngToOffset(19.3587, -99.2542, width, height, zoomScale)
                     drawLine(
                         color = Color(0xFF3F3F46),
-                        start = garciaLavinPos,
-                        end = altabrisaPos,
+                        start = santaFePos,
+                        end = polancaPos,
                         strokeWidth = 5.dp.toPx() * zoomScale
                     )
 
                     // Active Order Route & Driver Pin
                     if (selectedOrder != null) {
-                        val originLat = if (selectedOrder.originLat != 0.0) selectedOrder.originLat else 20.9850
-                        val originLng = if (selectedOrder.originLng != 0.0) selectedOrder.originLng else -89.6180
+                        val originLat = if (selectedOrder.originLat != 0.0) selectedOrder.originLat else 19.4326
+                        val originLng = if (selectedOrder.originLng != 0.0) selectedOrder.originLng else -99.1332
                         val destLat = if (selectedOrder.destLat != 0.0) selectedOrder.destLat else 21.0188
                         val destLng = if (selectedOrder.destLng != 0.0) selectedOrder.destLng else -89.5840
 
@@ -490,7 +490,7 @@ fun YaVaInteractiveMap(
                                             searchSuggestions = emptyList()
                                         }
                                     },
-                                    placeholder = { Text("Buscar en Mérida (ej. Altabrisa, Caucel, C. 60)", fontSize = 12.sp) },
+                                    placeholder = { Text("Buscar ubicación nacional (ej. Polanco, Centro, Reforma)", fontSize = 12.sp) },
                                     singleLine = true,
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = Color.Transparent,
@@ -637,7 +637,7 @@ fun YaVaInteractiveMap(
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Column {
                                         Text(
-                                            text = "Mérida OSM • ${currentTileLayer.label}",
+                                            text = "YaVa Mapa Nacional • ${currentTileLayer.label}",
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.ExtraBold,
                                             color = Color.White
@@ -693,7 +693,7 @@ fun YaVaInteractiveMap(
                                     // Engine Switcher
                                     Surface(
                                         onClick = {
-                                            currentEngine = if (currentEngine == MapEngine.LEAFLET_OSM) MapEngine.MERIDA_VECTOR else MapEngine.LEAFLET_OSM
+                                            currentEngine = if (currentEngine == MapEngine.LEAFLET_OSM) MapEngine.NATIONAL_VECTOR else MapEngine.LEAFLET_OSM
                                         },
                                         shape = RoundedCornerShape(8.dp),
                                         color = MaterialTheme.colorScheme.surfaceVariant
@@ -1296,7 +1296,7 @@ private fun buildLeafletHtml(): String {
                         var dx = (dLat - oLat) * 111.0;
                         var dy = (dLng - oLng) * 105.0;
                         var dist = Math.sqrt(dx*dx + dy*dy) * 1.25;
-                        callback(coords, dist, dist * 2.5, [{instruction: "Ruta en calles de Mérida", distance: dist*1000, duration: dist*150, modifier: "straight"}]);
+                        callback(coords, dist, dist * 2.5, [{instruction: "Ruta en calles urbanas", distance: dist*1000, duration: dist*150, modifier: "straight"}]);
                     }
                 }
 
@@ -1375,7 +1375,7 @@ private fun buildLeafletHtml(): String {
                         fleetData.forEach(function(d) {
                             var fm = L.marker([d.lat, d.lng], {icon: fleetIcon})
                                 .addTo(map)
-                                .bindPopup('<b style="color:#6366F1">🏍️ ' + d.name + '</b><br>Vehículo: ' + d.vehicle + '<br><span style="color:#10B981">● Activo en Mérida</span>');
+                                .bindPopup('<b style="color:#6366F1">🏍️ ' + d.name + '</b><br>Vehículo: ' + d.vehicle + '<br><span style="color:#10B981">● Activo en ruta nacional</span>');
                             fleetMarkers.push(fm);
                         });
                     }
@@ -1438,8 +1438,8 @@ private fun latLngToOffset(
     height: Float,
     zoomScale: Float
 ): Offset {
-    val normX = ((lng - MERIDA_MIN_LNG) / (MERIDA_MAX_LNG - MERIDA_MIN_LNG)).toFloat().coerceIn(0f, 1f)
-    val normY = (1.0 - ((lat - MERIDA_MIN_LAT) / (MERIDA_MAX_LAT - MERIDA_MIN_LAT))).toFloat().coerceIn(0f, 1f)
+    val normX = ((lng - NATIONAL_MIN_LNG) / (NATIONAL_MAX_LNG - NATIONAL_MIN_LNG)).toFloat().coerceIn(0f, 1f)
+    val normY = (1.0 - ((lat - NATIONAL_MIN_LAT) / (NATIONAL_MAX_LAT - NATIONAL_MIN_LAT))).toFloat().coerceIn(0f, 1f)
 
     val centerX = width / 2f
     val centerY = height / 2f
@@ -1468,8 +1468,8 @@ private fun offsetToLatLng(
     val normX = (rawX / width).coerceIn(0f, 1f)
     val normY = (rawY / height).coerceIn(0f, 1f)
 
-    val lng = MERIDA_MIN_LNG + normX * (MERIDA_MAX_LNG - MERIDA_MIN_LNG)
-    val lat = MERIDA_MAX_LAT - normY * (MERIDA_MAX_LAT - MERIDA_MIN_LAT)
+    val lng = NATIONAL_MIN_LNG + normX * (NATIONAL_MAX_LNG - NATIONAL_MIN_LNG)
+    val lat = NATIONAL_MAX_LAT - normY * (NATIONAL_MAX_LAT - NATIONAL_MIN_LAT)
 
     return Pair(lat, lng)
 }

@@ -98,14 +98,14 @@ fun YaVaGoogleMapsTracker(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    // Default coordinate: Merida Historic Center
-    val defaultCenter = LatLng(20.9674, -89.6237)
+    // Default coordinate: CDMX Center (National default)
+    val defaultCenter = LatLng(19.4326, -99.1332)
 
     val originLatLng = remember(selectedOrder?.originLat, selectedOrder?.originLng) {
         if (selectedOrder?.originLat != null && selectedOrder.originLat != 0.0) {
             LatLng(selectedOrder.originLat, selectedOrder.originLng)
         } else {
-            LatLng(20.9674, -89.6237)
+            LatLng(19.4326, -99.1332)
         }
     }
 

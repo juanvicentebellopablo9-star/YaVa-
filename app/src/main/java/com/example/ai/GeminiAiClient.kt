@@ -149,7 +149,7 @@ object GeminiAiClient {
     ): String = withContext(Dispatchers.IO) {
         val apiKey = BuildConfig.GEMINI_API_KEY
         if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
-            return@withContext "ℹ️ [YaVa! AI Assistant]: Configuración de API Key requerida en el panel de Secrets de AI Studio. Respondiendo en modo local Mérida, Yucatán: Servicio activo con cotización dinámica y 15% de comisión de plataforma."
+            return@withContext "ℹ️ [YaVa! AI Assistant]: Configuración de API Key requerida en el panel de Secrets de AI Studio. Respondiendo en modo local: Servicio activo con cotización dinámica y 15% de comisión de plataforma."
         }
 
         val toolsList = mutableListOf<JsonObject>()
@@ -209,11 +209,11 @@ object GeminiAiClient {
     suspend fun transcribeAudio(
         base64AudioData: String,
         mimeType: String = "audio/mp3",
-        prompt: String = "Transcribe este audio en español con exactitud para solicitud de envíos o direcciones en Mérida Yucatán."
+        prompt: String = "Transcribe este audio en español con exactitud para solicitud de envíos o direcciones a nivel nacional."
     ): String = withContext(Dispatchers.IO) {
         val apiKey = BuildConfig.GEMINI_API_KEY
         if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
-            return@withContext "Transcripción de audio local: 'Quiero un envío desde Centro Histórico hasta Altabrisa Mérida'."
+            return@withContext "Transcripción de audio local: 'Quiero un envío desde el centro hasta Polanco CDMX'."
         }
 
         val request = GeminiGenerateRequest(

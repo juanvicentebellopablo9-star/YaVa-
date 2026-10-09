@@ -272,7 +272,7 @@ fun TermsAndConditionsDialog(onDismiss: () -> Unit) {
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Descargar PDF Términos y Condiciones (Mérida, YUC)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("Descargar PDF Términos y Condiciones (Nacional)", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Spacer(modifier = Modifier.height(18.dp))
