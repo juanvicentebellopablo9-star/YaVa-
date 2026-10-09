@@ -20,6 +20,18 @@
       "description": "Slack Incoming Webhook URL for operations team alerts on order status changes. Get it from Slack > Apps > Incoming Webhooks (your-workspace.slack.com/services/new/incoming-webhook). Create a webhook for the #operaciones channel.",
       "requiredAtBoot": false,
       "generatedForDevelopment": true
+    },
+    {
+      "name": "STORE_PASSWORD",
+      "description": "Password for the release keystore (my-upload-key.jks). Used to sign the APK for production distribution. Replace with your own keystore password for real production releases.",
+      "requiredAtBoot": false,
+      "generatedForDevelopment": true
+    },
+    {
+      "name": "KEY_PASSWORD",
+      "description": "Password for the release key (alias 'upload') inside the keystore. Used to sign the APK for production distribution. Replace with your own key password for real production releases.",
+      "requiredAtBoot": false,
+      "generatedForDevelopment": true
     }
   ]
 }
