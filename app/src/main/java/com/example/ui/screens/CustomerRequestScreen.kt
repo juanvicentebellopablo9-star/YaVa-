@@ -1129,7 +1129,7 @@ fun CustomerRequestScreen(
                 )
                 onOrderCreatedAndTrack()
             },
-            enabled = clientName.isNotBlank() && clientPhone.isNotBlank() && originAddress.isNotBlank() && destinationAddress.isNotBlank(),
+            enabled = clientName.isNotBlank() && clientPhone.isNotBlank() && originAddress.isNotBlank() && destinationAddress.isNotBlank() && selectedOriginState.isNotBlank() && selectedDestState.isNotBlank(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = YaVaYellowPrimary,
                 contentColor = Color.Black

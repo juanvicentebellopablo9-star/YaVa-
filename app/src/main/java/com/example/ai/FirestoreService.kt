@@ -23,9 +23,16 @@ data class CloudOrder(
     val clientPhone: String = "",
     val originAddress: String = "",
     val destinationAddress: String = "",
+    val originState: String = "",
+    val destState: String = "",
+    val originLat: Double = 0.0,
+    val originLng: Double = 0.0,
+    val destLat: Double = 0.0,
+    val destLng: Double = 0.0,
     val distanceKm: Double = 0.0,
     val priceMxn: Double = 0.0,
     val packageType: String = "Paquete Estándar",
+    val serviceTier: String = "LOCAL", // LOCAL, INTERCITY, NATIONAL
     val status: String = "Creado", // Creado, Esperando conductor, Aceptado, En camino, Entregado, Cancelado
     val progressPercent: Int = 15,
     val statusDescription: String = "Pedido registrado y confirmado en la nube",
