@@ -11,8 +11,14 @@ services:
       - GRADLE_USER_HOME=/home/gradle/.gradle
       - ANDROID_HOME=/opt/android-sdk
     working_dir: /app
-    command: ["sh", "-c", "echo 'Android build environment ready'"]
-    restart: "no"
+    command: ["sh", "-c", "echo 'Android build environment ready' && sleep infinity"]
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "sh", "-c", "test -d /opt/android-sdk/platforms && test -x /app/gradlew"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   gradle-cache:
