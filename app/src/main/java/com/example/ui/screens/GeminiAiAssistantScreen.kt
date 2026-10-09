@@ -57,6 +57,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -83,6 +85,7 @@ import com.example.ai.FirestoreService
 import com.example.ai.GeminiAiClient
 import com.example.ai.GeminiContent
 import com.example.ai.GeminiPart
+import com.example.ai.GeminiSystemPrompts
 import com.example.ui.theme.YaVaYellowPrimary
 import com.example.ui.viewmodel.YaVaViewModel
 import kotlinx.coroutines.launch
@@ -217,15 +220,7 @@ fun GeminiAiAssistantScreen(
                 )
             }
 
-            val systemInstruction = """
-                Eres el asistente oficial de YaVa! Logistics, la plataforma de envíos y paquetería a nivel nacional en México.
-                - Sistema de Tarifa Dinámica Modular YaVa!: Base ($22 MXN) + Distancia ($6.50/km) + Tiempo Tráfico ($1.20/min) + Recargos de peso/clima. Tarifa mínima: $35 MXN.
-                - Niveles de servicio: LOCAL (urbano, <25 km), INTERCITY (entre ciudades, 25-200 km), NATIONAL (larga distancia, >200 km) con tarifas diferenciadas.
-                - Comisión de plataforma: 15% para YaVa!, 85% ganancia neta para el socio repartidor.
-                - Cobertura nacional: 32 estados de la República Mexicana, desde Tijuana hasta Cancún, desde Ciudad de México hasta Monterrey.
-                - Modalidad de pagos: Efectivo, Terminal con tarjeta, Transferencia SPEI (CLABE MercadoPago 722969010374423450 a nombre del Director Juan Vicente Bello Pablo).
-                - Sé servicial, rápido, cortés y muy exacto con direcciones de cualquier estado de México.
-            """.trimIndent()
+            val systemInstruction = GeminiSystemPrompts.nationalAssistantPrompt
 
             val isMaps = selectedMode == GeminiFeatureMode.MAPS_GROUNDING
             val isSearch = selectedMode == GeminiFeatureMode.SEARCH_GROUNDING
@@ -405,6 +400,36 @@ fun GeminiAiAssistantScreen(
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+            }
+        }
+
+        // Quick Suggestion Chips (tarifas y cobertura)
+        if (messages.size <= 1) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "💡 Sugerencias de tarifa y cobertura:",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                GeminiSystemPrompts.fareAndCoverageSuggestions.take(4).forEach { suggestion ->
+                    SuggestionChip(
+                        onClick = {
+                            inputText = suggestion
+                            sendMessage()
+                        },
+                        label = { Text(suggestion, fontSize = 10.sp) },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = YaVaYellowPrimary.copy(alpha = 0.12f),
+                            labelColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                }
             }
         }
 
